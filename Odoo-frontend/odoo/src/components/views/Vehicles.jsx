@@ -3,6 +3,7 @@ import { useTransitOps } from '../../hooks/TransitOpsContext';
 import KPICard from '../common/KPICard';
 import Table from '../common/Table';
 import StatusBadge from '../common/StatusBadge';
+import reportService from '../../services/reportService';
 import FleetMap from '../common/FleetMap';
 
 const Vehicles = () => {
@@ -12,11 +13,13 @@ const Vehicles = () => {
     addVehicle, 
     editVehicle, 
     deleteVehicle,
-    triggerToast 
+    triggerToast,
+    searchQuery
   } = useTransitOps();
 
   // Search, Sorting, Filtering, and Pagination States
-  const [searchQuery, setSearchQuery] = useState('');
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const activeSearchQuery = searchQuery || localSearchQuery;
   const [activeTab, setActiveTab] = useState('all');
   const [sortField, setSortField] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
@@ -223,7 +226,7 @@ const Vehicles = () => {
 
   // Filter, Sort, and Search queries
   const searchedVehicles = vehicles.filter(v => {
-    const query = searchQuery.toLowerCase();
+    const query = activeSearchQuery.toLowerCase();
     return (
       v.name.toLowerCase().includes(query) ||
       v.registrationNumber.toLowerCase().includes(query) ||
@@ -254,8 +257,26 @@ const Vehicles = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    triggerToast('Vehicle CSV data exported successfully (mock download).', 'info');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCSV = async () => {
+    try {
+      setIsExporting(true);
+      const blob = await reportService.exportFleetReport();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'vehicles.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      triggerToast('Vehicle CSV data exported successfully.', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      triggerToast('Failed to export vehicle data.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -341,8 +362,8 @@ const Vehicles = () => {
               <input
                 type="text"
                 placeholder="Search assets..."
-                value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                value={activeSearchQuery}
+                onChange={(e) => { setLocalSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="pl-8 pr-3 py-1.5 bg-white border border-outline-variant rounded-lg text-xs w-48 outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all"
               />
             </div>

@@ -1,12 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTransitOps } from '../../hooks/TransitOpsContext';
 import KPICard from '../common/KPICard';
 import Table from '../common/Table';
 import StatusBadge from '../common/StatusBadge';
 import FleetMap from '../common/FleetMap';
+import reportService from '../../services/reportService';
 
 const OperationalOverview = () => {
   const { vehicles, drivers, trips, maintenance, kpis: backendKpis, triggerToast } = useTransitOps();
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportReport = async () => {
+    try {
+      setIsExporting(true);
+      const blob = await reportService.exportFleetReport();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'fleet_report.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      triggerToast('Fleet Report exported successfully.', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      triggerToast('Failed to export report.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Compute robust KPIs handling both backend values and local calculations
   const totalVehiclesCount = backendKpis?.totalVehicles ?? vehicles.length;
@@ -144,11 +166,14 @@ const OperationalOverview = () => {
             Last 24 Hours
           </button>
           <button 
-            onClick={() => triggerToast('Fleet performance report exported (mock download).', 'success')}
-            className="px-unit-md py-2 rounded-lg bg-primary text-white font-body-md text-body-md font-semibold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-[0.98] cursor-pointer"
+            onClick={handleExportReport}
+            disabled={isExporting}
+            className="px-unit-md py-2 rounded-lg bg-primary text-white font-body-md text-body-md font-semibold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-[0.98] cursor-pointer disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[20px] select-none">file_download</span>
-            Export Report
+            <span className="material-symbols-outlined text-[20px] select-none">
+              {isExporting ? 'hourglass_empty' : 'file_download'}
+            </span>
+            {isExporting ? 'Exporting...' : 'Export Report'}
           </button>
         </div>
       </div>

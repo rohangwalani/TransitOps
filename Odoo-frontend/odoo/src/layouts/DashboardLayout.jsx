@@ -5,8 +5,10 @@ import Navbar from '../components/common/Navbar';
 import ToastContainer from '../components/common/ToastContainer';
 import { useTransitOps } from '../hooks/TransitOpsContext';
 import authService from '../services/authService';
+import { ChatWidget } from '../components/common/ChatWidget';
 
 export const DashboardLayout = () => {
+  const { searchQuery, setSearchQuery } = useTransitOps();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -105,6 +107,8 @@ export const DashboardLayout = () => {
           user={user} 
           onLogout={handleLogout} 
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
 
         {/* Content Canvas */}
@@ -124,6 +128,9 @@ export const DashboardLayout = () => {
           </footer>
         </main>
       </div>
+
+      {/* Global Chatbot widget */}
+      <ChatWidget />
 
       {/* Global Toast Alerts */}
       <ToastContainer />

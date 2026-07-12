@@ -8,7 +8,8 @@ const Maintenance = () => {
     addMaintenance, 
     completeMaintenance, 
     updateMaintenanceStatus,
-    triggerToast 
+    triggerToast,
+    searchQuery
   } = useTransitOps();
 
   // Modal State
@@ -25,10 +26,23 @@ const Maintenance = () => {
   // Filter vehicles that are not retired, in shop or on trip (Available)
   const availableVehicles = vehicles.filter(v => v.status === 'Available');
 
+  // Filter maintenance tasks by searchQuery
+  const filteredMaintenance = maintenance.filter(m => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      m.id.toLowerCase().includes(query) ||
+      (m.vehicleName && m.vehicleName.toLowerCase().includes(query)) ||
+      (m.vehicleReg && m.vehicleReg.toLowerCase().includes(query)) ||
+      (m.title && m.title.toLowerCase().includes(query)) ||
+      (m.description && m.description.toLowerCase().includes(query))
+    );
+  });
+
   // Group maintenance tasks by status columns
-  const scheduledTasks = maintenance.filter(m => m.status === 'Scheduled');
-  const inProgressTasks = maintenance.filter(m => m.status === 'In Progress');
-  const completedTasks = maintenance.filter(m => m.status === 'Completed');
+  const scheduledTasks = filteredMaintenance.filter(m => m.status === 'Scheduled');
+  const inProgressTasks = filteredMaintenance.filter(m => m.status === 'In Progress');
+  const completedTasks = filteredMaintenance.filter(m => m.status === 'Completed');
 
   const handleOpenAddModal = () => {
     setFormData({
