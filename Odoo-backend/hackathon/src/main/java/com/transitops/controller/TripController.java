@@ -10,12 +10,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import com.transitops.entity.Trip;
+import com.transitops.service.TripService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/v1/trips")
+@RequestMapping("/api/trips")
+@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class TripController {
 

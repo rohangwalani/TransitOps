@@ -3,7 +3,7 @@ import KPICard from './common/KPICard';
 import Table from './common/Table';
 import StatusBadge from './common/StatusBadge';
 
-const FuelExpenses = () => {
+const FuelExpenses = ({ searchQuery = '' }) => {
   const [activeTab, setActiveTab] = useState('Week');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -87,6 +87,13 @@ const FuelExpenses = () => {
       label: 'High Usage Alert',
     },
   ];
+
+  const filteredTransactions = recentTransactions.filter(
+    (tx) =>
+      tx.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.plate.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
 
   const tableColumns = [
     {
@@ -321,7 +328,7 @@ const FuelExpenses = () => {
             </div>
           </div>
 
-          <Table columns={tableColumns} data={recentTransactions} />
+          <Table columns={tableColumns} data={filteredTransactions} />
 
           <div className="p-unit-md border-t border-outline-variant flex justify-center bg-surface-container-lowest">
             <button

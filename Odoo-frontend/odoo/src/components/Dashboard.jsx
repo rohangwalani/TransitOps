@@ -14,7 +14,9 @@ import Settings from './Settings';
 const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
   
   // Load session user details
   const [user, setUser] = useState(() => {
@@ -72,9 +74,10 @@ const Dashboard = () => {
       case 'maintenance':
         return <Maintenance />;
       case 'fuel':
-        return <FuelExpenses />;
+        return <FuelExpenses searchQuery={searchQuery} />;
       case 'reports':
-        return <Reports />;
+        return <Reports searchQuery={searchQuery} />;
+
       case 'settings':
         return <Settings />;
       case 'dashboard':
@@ -106,6 +109,8 @@ const Dashboard = () => {
           user={user} 
           onLogout={handleLogout} 
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
 
         {/* Content Canvas */}

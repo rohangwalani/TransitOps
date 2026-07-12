@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 const Settings = () => {
   const [activeSubTab, setActiveSubTab] = useState('account');
   const [showToast, setShowToast] = useState(false);
+  const [toastMsg, setToastMsg] = useState('Settings updated successfully');
+  const fileInputRef = useRef(null);
+  const [profileImg, setProfileImg] = useState("https://lh3.googleusercontent.com/aida-public/AB6AXuCn7dZBgvRLsI9bI_xpEvyfhcQ4dKHdAc-i-SJQqUByis5Q6Hy2z76_HJRsT1S__7zu0DCHvyDhi4lpkIfRaO08AEzvGs3Ap57JNNsKErgr3k6eSq_4C6PX7YZ4Nka3q81-zXKcNduqrngQfpPLCYYlewNE8SJP0tE3mN6kKzGORX4ljr0pJshg3rD1ExRfCI6in8DHDUNlZhbgqua5J3Yy0_cf-97X_tuERn0QpSC-GXhAbnp8rW6VhA");
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImg(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   // Form State
   const initialFormState = {
+    // Account details
     fullName: 'Jane Alexandra Doe',
     email: 'jane.doe@transitops.io',
     contactNumber: '+1 (555) 902-3482',
@@ -15,6 +31,23 @@ const Settings = () => {
     vehicleHealthAlerts: true,
     tripScheduleChanges: true,
     dailyOpsDigest: false,
+    
+    // Security & Privacy details
+    loginEmail: 'jane.doe@transitops.io',
+    recoveryPhone: '+1 (555) 902-3482',
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: '',
+    enable2FA: true,
+
+    // Company profile details
+    companyName: 'TransitOps Enterprise Logistics',
+    companyRegNo: 'TO-992188-B',
+    companyIndustry: 'Supply Chain & Third-Party Logistics (3PL)',
+    companyHQ: '100 Logistics Blvd, Suite 400, Chicago, IL 60601',
+    companyWebsite: 'https://transitops.io',
+    companyEmail: 'operations@transitops.io',
+    companyAbout: 'TransitOps is a leading global supply chain partner specializing in automated fleet tracking, freight brokerage integration, and next-generation route optimization. Founded in 2018, our mission is to deliver seamless end-to-end logistics solutions powered by machine learning and real-time operations dashboards. Today, we manage over 5,000 active vehicles spanning freightliners, commercial sprinters, and last-mile delivery vans across North America.',
   };
 
   const [formData, setFormData] = useState({ ...initialFormState });
@@ -30,7 +63,15 @@ const Settings = () => {
 
   // Save Settings
   const handleSave = () => {
-    // Show toast
+    if (activeSubTab === 'security') {
+      if (formData.newPassword !== formData.confirmNewPassword) {
+        setToastMsg('New passwords do not match');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        return;
+      }
+    }
+    setToastMsg('Settings updated successfully');
     setShowToast(true);
     setTimeout(() => {
       setShowToast(false);
@@ -45,10 +86,7 @@ const Settings = () => {
   const subTabs = [
     { id: 'account', label: 'Account', icon: 'account_circle' },
     { id: 'company', label: 'Company Profile', icon: 'business' },
-    { id: 'notifications', label: 'Notifications', icon: 'notifications_active' },
     { id: 'security', label: 'Security & Privacy', icon: 'security' },
-    { id: 'billing', label: 'Billing & Plans', icon: 'payments' },
-    { id: 'integrations', label: 'Integrations', icon: 'api' },
   ];
 
   return (
@@ -84,9 +122,9 @@ const Settings = () => {
           })}
         </nav>
 
-        {/* Active View: Account & Personal Info */}
+        {/* Active View: Settings Content */}
         <div className="col-span-12 md:col-span-9 space-y-6">
-          {activeSubTab === 'account' ? (
+          {activeSubTab === 'account' && (
             <>
               {/* Profile Hero Card */}
               <section className="settings-card-gradient p-8 rounded-xl border border-outline-variant shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 bg-gradient-to-br from-white to-[#f8f9ff]">
@@ -96,12 +134,22 @@ const Settings = () => {
                       <img
                         className="w-full h-full object-cover"
                         alt="Jane Doe profile"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn7dZBgvRLsI9bI_xpEvyfhcQ4dKHdAc-i-SJQqUByis5Q6Hy2z76_HJRsT1S__7zu0DCHvyDhi4lpkIfRaO08AEzvGs3Ap57JNNsKErgr3k6eSq_4C6PX7YZ4Nka3q81-zXKcNduqrngQfpPLCYYlewNE8SJP0tE3mN6kKzGORX4ljr0pJshg3rD1ExRfCI6in8DHDUNlZhbgqua5J3Yy0_cf-97X_tuERn0QpSC-GXhAbnp8rW6VhA"
+                        src={profileImg}
                       />
                     </div>
-                    <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                    <button
+                      onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      className="absolute -bottom-2 -right-2 w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                    >
                       <span className="material-symbols-outlined text-sm">photo_camera</span>
                     </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
                   </div>
                   <div>
                     <h3 className="font-headline-md text-headline-md text-on-surface">Jane Doe</h3>
@@ -116,10 +164,8 @@ const Settings = () => {
                     </div>
                   </div>
                 </div>
-                <button className="px-6 py-2.5 bg-white border border-outline-variant text-on-surface font-semibold rounded-lg hover:bg-surface-container-low transition-all shadow-sm">
-                  Edit Profile
-                </button>
               </section>
+
 
               {/* Personal Information Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -348,16 +394,247 @@ const Settings = () => {
                 </button>
               </div>
             </>
-          ) : (
-            <div className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant shadow-sm text-center">
-              <span className="material-symbols-outlined text-4xl text-outline mb-2">construction</span>
-              <h3 className="font-title-md text-title-md text-on-surface">
-                {subTabs.find((t) => t.id === activeSubTab)?.label}
-              </h3>
-              <p className="text-on-surface-variant text-body-md mt-1">
-                This configuration section is currently under development.
-              </p>
-            </div>
+          )}
+
+          {activeSubTab === 'security' && (
+            <>
+              {/* Security Details & Change Password Forms */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Security details edit */}
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-title-md text-title-md text-on-surface">Security Details</h4>
+                    <span className="material-symbols-outlined text-outline">verified_user</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Login Email Address
+                      </label>
+                      <input
+                        type="email"
+                        name="loginEmail"
+                        value={formData.loginEmail}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Recovery Phone Number
+                      </label>
+                      <input
+                        type="text"
+                        name="recoveryPhone"
+                        value={formData.recoveryPhone}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Password change form */}
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-title-md text-title-md text-on-surface">Change Password</h4>
+                    <span className="material-symbols-outlined text-outline">lock</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        name="currentPassword"
+                        value={formData.currentPassword}
+                        onChange={handleInputChange}
+                        placeholder="••••••••"
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleInputChange}
+                        placeholder="••••••••"
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        name="confirmNewPassword"
+                        value={formData.confirmNewPassword}
+                        onChange={handleInputChange}
+                        placeholder="••••••••"
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Action Bar */}
+              <div className="flex items-center justify-end gap-4 pt-4 pb-12">
+                <button
+                  onClick={handleDiscard}
+                  className="px-6 py-2.5 text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container transition-all"
+                >
+                  Discard Changes
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-8 py-2.5 bg-primary text-white font-bold rounded-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </>
+          )}
+
+          {activeSubTab === 'company' && (
+            <>
+              {/* Company Details & About Us Forms */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Company Details */}
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-title-md text-title-md text-on-surface">Company Profile</h4>
+                    <span className="material-symbols-outlined text-outline">business</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Company Name
+                      </label>
+                      <input
+                        type="text"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Registration Number
+                      </label>
+                      <input
+                        type="text"
+                        name="companyRegNo"
+                        value={formData.companyRegNo}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Industry Sector
+                      </label>
+                      <input
+                        type="text"
+                        name="companyIndustry"
+                        value={formData.companyIndustry}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Corporate Headquarters
+                      </label>
+                      <input
+                        type="text"
+                        name="companyHQ"
+                        value={formData.companyHQ}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Website Address
+                      </label>
+                      <input
+                        type="text"
+                        name="companyWebsite"
+                        value={formData.companyWebsite}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Contact Email Address
+                      </label>
+                      <input
+                        type="email"
+                        name="companyEmail"
+                        value={formData.companyEmail}
+                        onChange={handleInputChange}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* About Us Description */}
+                <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-title-md text-title-md text-on-surface">About Us</h4>
+                    <span className="material-symbols-outlined text-outline">description</span>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-label-sm text-on-surface-variant uppercase mb-1">
+                        Company Description
+                      </label>
+                      <textarea
+                        name="companyAbout"
+                        value={formData.companyAbout}
+                        onChange={handleInputChange}
+                        rows={12}
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none resize-none"
+                      />
+                    </div>
+                    
+                    {/* Visual Fleet Status Summary */}
+                    <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
+                      <h5 className="font-semibold text-sm text-primary mb-1">Associated Workspace</h5>
+                      <p className="text-xs text-on-surface-variant">
+                        You are currently administering assets linked to the primary logistics hub under the registration node <strong>{formData.companyRegNo}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Action Bar */}
+              <div className="flex items-center justify-end gap-4 pt-4 pb-12">
+                <button
+                  onClick={handleDiscard}
+                  className="px-6 py-2.5 text-on-surface-variant font-semibold rounded-lg hover:bg-surface-container transition-all"
+                >
+                  Discard Changes
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-8 py-2.5 bg-primary text-white font-bold rounded-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -372,9 +649,9 @@ const Settings = () => {
           className="material-symbols-outlined text-secondary"
           style={{ fontVariationSettings: "'FILL' 1" }}
         >
-          check_circle
+          {toastMsg.includes('match') ? 'error' : 'check_circle'}
         </span>
-        <span className="font-semibold text-body-md">Settings updated successfully</span>
+        <span className="font-semibold text-body-md">{toastMsg}</span>
       </div>
     </div>
   );
