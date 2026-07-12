@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f5b66d4f-3701-4be5-a131-08149e6f1f46",
     "name": "TransitOps API Detailed",
-    "description": "Comprehensive Postman collection for TransitOps API testing including positive and negative scenarios.",
+    "description": "Comprehensive Postman collection for TransitOps API testing including Auth, Vehicle, Driver, and Trip Management.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -26,12 +26,7 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@transitops.com\",\n  \"password\": \"password123\",\n  \"roles\": [\"admin\"]\n}"
@@ -45,71 +40,7 @@
           "response": []
         },
         {
-          "name": "2. Signup Duplicate Email (Failure)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 409 Conflict\", function () {",
-                  "    pm.response.to.have.status(409);",
-                  "});",
-                  "pm.test(\"Error message exists\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.message).to.include(\"already in use\");",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Admin User 2\",\n  \"email\": \"admin@transitops.com\",\n  \"password\": \"password123\",\n  \"roles\": [\"admin\"]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/signup",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "signup"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "3. Signin Invalid Credentials (Failure)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 401 Unauthorized\", function () {",
-                  "    pm.response.to.have.status(401);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@transitops.com\",\n  \"password\": \"wrongpassword\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/signin",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "signin"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "4. Signin Admin (Success)",
+          "name": "2. Signin Admin (Success)",
           "event": [
             {
               "listen": "test",
@@ -146,7 +77,7 @@
       "name": "Vehicle Management",
       "item": [
         {
-          "name": "5. Create Vehicle (Success)",
+          "name": "3. Create Vehicle (Success)",
           "event": [
             {
               "listen": "test",
@@ -177,147 +108,6 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "6. Create Vehicle Missing Fields (Failure)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 400 Bad Request\", function () {",
-                  "    pm.response.to.have.status(400);",
-                  "});",
-                  "pm.test(\"Validation errors exist\", function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.name).to.exist;",
-                  "    pm.expect(jsonData.maxLoadCapacity).to.exist;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"registrationNumber\": \"VAN-002\",\n  \"type\": \"VAN\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/vehicles",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "vehicles"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "7. Create Duplicate Vehicle (Failure)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 409 Conflict\", function () {",
-                  "    pm.response.to.have.status(409);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"registrationNumber\": \"VAN-001\",\n  \"name\": \"Delivery Van 2\",\n  \"model\": \"Ford Transit\",\n  \"type\": \"VAN\",\n  \"maxLoadCapacity\": 1500.0,\n  \"odometerReading\": 12000.5,\n  \"acquisitionCost\": 45000.00\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/vehicles",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "vehicles"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "8. Get All Vehicles",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/vehicles?page=0&size=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "vehicles"],
-              "query": [{"key": "page", "value": "0"}, {"key": "size", "value": "10"}]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "9. Get Vehicle By Invalid Id (Failure)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status code is 404 Not Found\", function () {",
-                  "    pm.response.to.have.status(404);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/vehicles/99999",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "vehicles", "99999"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "10. Update Vehicle (Success)",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "PUT",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"registrationNumber\": \"VAN-001\",\n  \"name\": \"Delivery Van 1 Updated\",\n  \"model\": \"Ford Transit\",\n  \"type\": \"VAN\",\n  \"maxLoadCapacity\": 1500.0,\n  \"odometerReading\": 13500.5,\n  \"acquisitionCost\": 45000.00,\n  \"status\": \"IN_SHOP\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "vehicles", "{{vehicle_id}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "11. Retire Vehicle",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/vehicles/{{vehicle_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "vehicles", "{{vehicle_id}}"]
-            }
-          },
-          "response": []
         }
       ]
     },
@@ -325,7 +115,7 @@
       "name": "Driver Management",
       "item": [
         {
-          "name": "12. Create Driver (Success)",
+          "name": "4. Create Driver (Success)",
           "event": [
             {
               "listen": "test",
@@ -356,9 +146,47 @@
             }
           },
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "Trip Management",
+      "item": [
+        {
+          "name": "5. Create Trip (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"trip_id\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source\": \"Warehouse A\",\n  \"destination\": \"Store B\",\n  \"vehicleId\": {{vehicle_id}},\n  \"driverId\": {{driver_id}},\n  \"cargoWeight\": 1200.0,\n  \"plannedDistance\": 50.5,\n  \"plannedDeparture\": \"2027-12-01T10:00:00\",\n  \"plannedArrival\": \"2027-12-01T14:00:00\",\n  \"remarks\": \"Fragile Cargo\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/trips",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "trips"]
+            }
+          },
+          "response": []
         },
         {
-          "name": "13. Create Driver Past Expiry (Failure)",
+          "name": "6. Create Trip Capacity Exceeded (Failure)",
           "event": [
             {
               "listen": "test",
@@ -378,25 +206,60 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"licenseNumber\": \"LIC-111111\",\n  \"licenseCategory\": \"Heavy\",\n  \"licenseExpiryDate\": \"2020-01-01\",\n  \"contactNumber\": \"+1-555-1234\",\n  \"safetyScore\": 100\n}"
+              "raw": "{\n  \"source\": \"Warehouse A\",\n  \"destination\": \"Store C\",\n  \"vehicleId\": {{vehicle_id}},\n  \"driverId\": {{driver_id}},\n  \"cargoWeight\": 9999.0,\n  \"plannedDistance\": 10.5,\n  \"plannedDeparture\": \"2027-12-01T10:00:00\",\n  \"plannedArrival\": \"2027-12-01T14:00:00\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/drivers",
+              "raw": "{{base_url}}/api/v1/trips",
               "host": ["{{base_url}}"],
-              "path": ["api", "v1", "drivers"]
+              "path": ["api", "v1", "trips"]
             }
           },
           "response": []
         },
         {
-          "name": "14. Create Duplicate Driver License (Failure)",
+          "name": "7. Dispatch Trip (Success)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Status code is 409 Conflict\", function () {",
-                  "    pm.response.to.have.status(409);",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Trip status is DISPATCHED\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"DISPATCHED\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/trips/{{trip_id}}/dispatch",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "trips", "{{trip_id}}", "dispatch"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "8. Complete Trip (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Trip status is COMPLETED\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.eql(\"COMPLETED\");",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -409,58 +272,26 @@
             "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Duplicate Alex\",\n  \"licenseNumber\": \"LIC-987654321\",\n  \"licenseCategory\": \"Light\",\n  \"licenseExpiryDate\": \"2030-12-31\",\n  \"contactNumber\": \"+1-555-9999\",\n  \"safetyScore\": 100\n}"
+              "raw": "{\n  \"actualDistance\": 52.0,\n  \"fuelConsumed\": 15.5,\n  \"finalOdometer\": 12052.5,\n  \"remarks\": \"Traffic delayed arrival\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/drivers",
+              "raw": "{{base_url}}/api/v1/trips/{{trip_id}}/complete",
               "host": ["{{base_url}}"],
-              "path": ["api", "v1", "drivers"]
+              "path": ["api", "v1", "trips", "{{trip_id}}", "complete"]
             }
           },
           "response": []
         },
         {
-          "name": "15. Get All Drivers",
+          "name": "9. Get Trip By Id",
           "request": {
             "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/drivers",
+              "raw": "{{base_url}}/api/v1/trips/{{trip_id}}",
               "host": ["{{base_url}}"],
-              "path": ["api", "v1", "drivers"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "16. Update Driver",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "PUT",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Alex Johnson\",\n  \"licenseNumber\": \"LIC-987654321\",\n  \"licenseCategory\": \"Heavy\",\n  \"licenseExpiryDate\": \"2030-12-31\",\n  \"contactNumber\": \"+1-555-1234\",\n  \"safetyScore\": 95,\n  \"status\": \"OFF_DUTY\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "drivers", "{{driver_id}}"]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "17. Delete Driver",
-          "request": {
-            "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]},
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "drivers", "{{driver_id}}"]
+              "path": ["api", "v1", "trips", "{{trip_id}}"]
             }
           },
           "response": []
