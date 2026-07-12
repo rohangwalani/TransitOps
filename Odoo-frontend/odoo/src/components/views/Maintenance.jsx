@@ -76,6 +76,7 @@ const Maintenance = () => {
       description: formData.description,
       type: formData.type,
       cost: Number(formData.cost),
+      date: new Date().toISOString().split('T')[0]
     });
 
     if (success) {
@@ -214,8 +215,8 @@ const Maintenance = () => {
                   <div className="flex items-center justify-between border-t border-outline-variant/20 pt-3 mt-3">
                     <span className="font-body-md text-primary font-bold font-mono">${task.cost}</span>
                     <button 
-                      onClick={() => completeMaintenance(task.id)}
-                      className="px-2.5 py-1 bg-secondary text-white text-xs font-bold rounded shadow-sm hover:opacity-90 transition-all"
+                      onClick={() => completeMaintenance(task.id, task.cost)}
+                      className="px-2.5 py-1 bg-secondary text-white text-xs font-bold rounded shadow-sm hover:opacity-90 transition-all cursor-pointer"
                     >
                       Complete
                     </button>

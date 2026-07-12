@@ -275,11 +275,10 @@ export const TransitOpsProvider = ({ children }) => {
   /* ================================================================== */
   const addMaintenance = async (task) => {
     try {
-      const created   = await maintenanceService.create(toMaintenanceRequest(task));
-      const activated = await maintenanceService.activate(created.id);
-      setMaintenance(prev => [normalizeMaintenance(activated), ...prev]);
+      const created = await maintenanceService.create(toMaintenanceRequest(task));
+      setMaintenance(prev => [normalizeMaintenance(created), ...prev]);
       fetchVehicles();
-      triggerToast(`Maintenance scheduled. Vehicle moved to In Shop.`, 'success');
+      triggerToast(`Maintenance task scheduled successfully.`, 'success');
       return true;
     } catch (err) {
       triggerToast(extractError(err), 'error');

@@ -1,26 +1,77 @@
 package com.transitops.config;
 
 import com.transitops.entity.Driver;
+import com.transitops.entity.User;
 import com.transitops.enums.DriverStatus;
+import com.transitops.enums.RoleType;
 import com.transitops.repository.DriverRepository;
+import com.transitops.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final DriverRepository driverRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DatabaseSeeder(DriverRepository driverRepository) {
+    public DatabaseSeeder(DriverRepository driverRepository,
+                          UserRepository userRepository,
+                          PasswordEncoder passwordEncoder) {
         this.driverRepository = driverRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) throws Exception {
+        // Seed Users
+        System.out.println("Checking users seeding status...");
+        
+        if (!userRepository.existsByEmail("yash.hirwani@transitops.io")) {
+            System.out.println("Seeding database with default user Yash Hirwani...");
+            Set<RoleType> yashRoles = new HashSet<>();
+            yashRoles.add(RoleType.ROLE_FLEET_MANAGER);
+            
+            User yash = User.builder()
+                    .name("Yash Hirwani")
+                    .email("yash.hirwani@transitops.io")
+                    .password(passwordEncoder.encode("password"))
+                    .phone("+1 (555) 902-3482")
+                    .roles(yashRoles)
+                    .enabled(true)
+                    .build();
+            userRepository.save(yash);
+            System.out.println("Yash Hirwani user seeded.");
+        }
+
+        if (!userRepository.existsByEmail("admin@transitops.io")) {
+            System.out.println("Seeding database with default admin user...");
+            Set<RoleType> adminRoles = new HashSet<>();
+            adminRoles.add(RoleType.ROLE_ADMIN);
+            adminRoles.add(RoleType.ROLE_FLEET_MANAGER);
+            
+            User admin = User.builder()
+                    .name("Admin User")
+                    .email("admin@transitops.io")
+                    .password(passwordEncoder.encode("password"))
+                    .phone("+1 (555) 902-1234")
+                    .roles(adminRoles)
+                    .enabled(true)
+                    .build();
+            userRepository.save(admin);
+            System.out.println("Admin user seeded.");
+        }
+
+        // Seed Drivers
         if (driverRepository.count() < 10) {
             System.out.println("Seeding database with mock drivers for pagination testing...");
             List<Driver> mockDrivers = new ArrayList<>();

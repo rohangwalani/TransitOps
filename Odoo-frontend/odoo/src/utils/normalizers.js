@@ -37,6 +37,7 @@ const tripStatusMap = {
 
 const maintenanceStatusMap = {
   SCHEDULED:   'Scheduled',
+  ACTIVE:      'In Progress',
   IN_PROGRESS: 'In Progress',
   COMPLETED:   'Completed',
   CANCELLED:   'Cancelled',

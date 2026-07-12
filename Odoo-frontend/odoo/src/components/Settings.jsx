@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTransitOps } from '../hooks/TransitOpsContext';
+import authService from '../services/authService';
 
 const Settings = () => {
   const { triggerToast } = useTransitOps();
@@ -93,8 +94,32 @@ const Settings = () => {
   };
 
   // Save Settings
-  const handleSave = () => {
+  const handleSave = async () => {
     try {
+      if (formData.newPassword) {
+        if (!formData.currentPassword) {
+          triggerToast('Please provide your current password to change it.', 'error');
+          return;
+        }
+        if (formData.newPassword.length < 6) {
+          triggerToast('New password must be at least 6 characters long.', 'error');
+          return;
+        }
+        if (formData.newPassword !== formData.confirmNewPassword) {
+          triggerToast('New passwords do not match.', 'error');
+          return;
+        }
+        
+        try {
+          await authService.changePassword(formData.currentPassword, formData.newPassword);
+          setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmNewPassword: '' }));
+          triggerToast('Password changed successfully!', 'success');
+        } catch (err) {
+          triggerToast(err.response?.data?.message || err.message || 'Failed to change password.', 'error');
+          return;
+        }
+      }
+
       const updatedUser = {
         ...activeUser,
         name: formData.fullName,

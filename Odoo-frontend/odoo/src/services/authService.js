@@ -11,6 +11,11 @@ export const authService = {
     return response.data;
   },
 
+  changePassword: async (oldPassword, newPassword) => {
+    const response = await api.post('/api/auth/change-password', { oldPassword, newPassword });
+    return response.data;
+  },
+
   logout: () => {
     localStorage.removeItem('user');
   },

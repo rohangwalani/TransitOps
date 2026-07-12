@@ -1,5 +1,6 @@
 package com.transitops.controller;
 
+import com.transitops.dto.request.ChangePasswordRequest;
 import com.transitops.dto.request.LoginRequest;
 import com.transitops.dto.request.SignupRequest;
 import com.transitops.dto.response.JwtResponse;
@@ -97,5 +98,26 @@ public class AuthController {
         userRepository.save(user);
         log.info("User registered successfully: {}", signupRequest.getEmail());
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
+    @PostMapping("/change-password")
+    @Operation(summary = "Change user password")
+    public ResponseEntity<MessageResponse> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentEmail = authentication.getName();
+        log.info("Password change attempt for email: {}", currentEmail);
+
+        User user = userRepository.findByEmail(currentEmail)
+                .orElseThrow(() -> new RuntimeException("Error: User is not found."));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Error: Incorrect old password!"));
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("Password changed successfully for email: {}", currentEmail);
+        return ResponseEntity.ok(new MessageResponse("Password changed successfully!"));
     }
 }

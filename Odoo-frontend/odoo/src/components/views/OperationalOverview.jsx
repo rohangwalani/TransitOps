@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useTransitOps } from '../../hooks/TransitOpsContext';
+
+// Paste your Mistral API Key here:
+const MISTRAL_API_KEY = import.meta.env.VITE_MISTRAL_API_KEY || "YOUR_MISTRAL_API_KEY";
 import KPICard from '../common/KPICard';
 import Table from '../common/Table';
 import StatusBadge from '../common/StatusBadge';
@@ -9,6 +12,9 @@ import reportService from '../../services/reportService';
 const OperationalOverview = () => {
   const { vehicles, drivers, trips, maintenance, kpis: backendKpis, triggerToast } = useTransitOps();
   const [isExporting, setIsExporting] = useState(false);
+  const [aiInsight, setAiInsight] = useState("");
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   const handleExportReport = async () => {
     try {
@@ -53,6 +59,51 @@ const OperationalOverview = () => {
     driversOnDuty: driversActiveDuty,
     maintenanceCount: activeMaintCount,
     utilization: Math.round(Number(utilizationVal) || 0)
+  };
+
+  const handleOptimize = async () => {
+    if (isOptimizing) return;
+    
+    if (!MISTRAL_API_KEY || MISTRAL_API_KEY === 'YOUR_MISTRAL_API_KEY') {
+      triggerToast('Mistral API Key is not configured. Please define it in OperationalOverview.jsx or .env', 'error');
+      return;
+    }
+
+    setIsOptimizing(true);
+    try {
+      const systemPrompt = {
+        role: 'system',
+        content: `You are a Fleet AI Optimization Engine. The current fleet metrics are: ${kpis.totalVehicles} total vehicles, ${kpis.availableVehicles} available, ${kpis.vehiclesOnTrip} on trips, ${kpis.maintenanceCount} in maintenance, with a ${kpis.utilization}% utilization rate. Provide a single short sentence recommendation on how to optimize operations, followed by 'Optimization applied successfully.' Keep it under 25 words.`
+      };
+
+      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${MISTRAL_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'open-mistral-7b',
+          messages: [systemPrompt, { role: 'user', content: 'Generate optimization insight.' }],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Mistral API error (${response.status})`);
+      }
+
+      const data = await response.json();
+      const assistantText = data?.choices?.[0]?.message?.content;
+      if (assistantText) {
+        setAiInsight(assistantText);
+        setShowAiModal(true);
+      }
+    } catch (err) {
+      console.error(err);
+      triggerToast('Failed to run AI optimization: ' + err.message, 'error');
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   // Dynamic Chart values calculated based on active states
@@ -315,16 +366,19 @@ const OperationalOverview = () => {
         
         {/* AI Optimization Insight */}
         <div 
-          onClick={() => triggerToast('Rerouting optimization parameters successfully applied!', 'success')}
-          className="p-unit-lg bg-inverse-surface text-inverse-on-surface rounded-xl flex items-center gap-6 overflow-hidden relative min-h-[160px] cursor-pointer group"
+          onClick={handleOptimize}
+          className={`p-unit-lg bg-inverse-surface text-inverse-on-surface rounded-xl flex items-center gap-6 overflow-hidden relative min-h-[160px] cursor-pointer group ${isOptimizing ? 'opacity-80 pointer-events-none' : ''}`}
         >
           <div className="flex-1 z-10">
-            <h4 className="font-title-md text-title-md mb-2">AI Optimization Insight</h4>
+            <h4 className="font-title-md text-title-md mb-2 flex items-center gap-2">
+              AI Optimization Insight
+              {isOptimizing && <span className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></span>}
+            </h4>
             <p className="font-body-md text-body-md opacity-80">
-              Rerouting active vehicles around Mumbai corridor could save 4.2% fuel costs today based on real-time traffic updates.
+              Tap below to use Mistral AI to analyze current metrics and generate a real-time operational optimization strategy.
             </p>
             <button className="mt-4 px-unit-md py-2 bg-primary-fixed text-primary font-bold rounded-lg group-hover:bg-white transition-colors">
-              Apply Optimization
+              {isOptimizing ? 'Optimizing...' : 'Generate AI Strategy'}
             </button>
           </div>
           <div className="w-32 h-32 opacity-20 absolute -right-4 -bottom-4 flex items-center justify-center select-none pointer-events-none">
@@ -349,6 +403,48 @@ const OperationalOverview = () => {
           <p className="font-body-md text-body-md text-on-surface-variant mt-2 font-medium">All API nodes and tracking sensors are operational.</p>
         </div>
       </section>
+
+      {/* AI Insight Modal */}
+      {showAiModal && (
+        <div className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+            <div className="bg-primary p-6 text-white relative">
+              <h3 className="font-title-lg font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined">auto_awesome</span>
+                AI Optimization Insight
+              </h3>
+              <button 
+                onClick={() => setShowAiModal(false)}
+                className="absolute top-4 right-4 p-1 hover:bg-white/20 rounded-full transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="font-body-lg text-on-surface leading-relaxed">
+                {aiInsight}
+              </p>
+              <div className="mt-8 flex justify-end gap-3">
+                <button 
+                  onClick={() => setShowAiModal(false)}
+                  className="px-4 py-2 border border-outline-variant text-on-surface rounded-lg font-bold hover:bg-surface-container transition-colors cursor-pointer"
+                >
+                  Dismiss
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowAiModal(false);
+                    triggerToast('Optimization applied to fleet schedule.', 'success');
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-lg font-bold shadow-sm hover:opacity-90 transition-colors cursor-pointer"
+                >
+                  Apply Strategy
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

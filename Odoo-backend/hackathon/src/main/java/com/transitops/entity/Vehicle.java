@@ -33,6 +33,7 @@ public class Vehicle {
 
     private String make;
 
+    @Column(name = "vehicle_year")
     private Integer year;
 
     @Enumerated(EnumType.STRING)
