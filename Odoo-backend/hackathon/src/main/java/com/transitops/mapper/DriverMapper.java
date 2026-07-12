@@ -47,9 +47,13 @@ public class DriverMapper {
 
     public DriverResponseDTO toDto(Driver driver) {
         LocalDate today = LocalDate.now();
-        boolean licenseExpired = driver.getLicenseExpiryDate().isBefore(today);
-        boolean licenseExpiringSoon = !licenseExpired &&
-                driver.getLicenseExpiryDate().isBefore(today.plusDays(30));
+        boolean licenseExpired = false;
+        boolean licenseExpiringSoon = false;
+        if (driver.getLicenseExpiryDate() != null) {
+            licenseExpired = driver.getLicenseExpiryDate().isBefore(today);
+            licenseExpiringSoon = !licenseExpired &&
+                    driver.getLicenseExpiryDate().isBefore(today.plusDays(30));
+        }
 
         return DriverResponseDTO.builder()
                 .id(driver.getId())
