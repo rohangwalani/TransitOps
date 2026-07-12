@@ -1,102 +1,64 @@
 package com.transitops.controller;
 
-import com.transitops.dto.request.LoginRequest;
-import com.transitops.dto.request.SignupRequest;
-import com.transitops.dto.response.JwtResponse;
-import com.transitops.dto.response.MessageResponse;
 import com.transitops.entity.User;
-import com.transitops.enums.RoleType;
-import com.transitops.exception.DuplicateResourceException;
-import com.transitops.repository.UserRepository;
-import com.transitops.security.jwt.JwtUtils;
-import com.transitops.security.services.UserDetailsImpl;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import com.transitops.security.JwtUtil;
+import com.transitops.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class AuthController {
+
+    private final UserService userService;
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final PasswordEncoder encoder;
-    private final JwtUtils jwtUtils;
+    private final JwtUtil jwtUtil;
 
-    @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(new JwtResponse(jwt,
-                userDetails.getId(),
-                userDetails.getName(),
-                userDetails.getUsername(),
-                roles));
+    public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            throw new DuplicateResourceException("Error: Email is already in use!");
-        }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody User user) {
+        User savedUser = userService.registerUser(user);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "User registered successfully");
+        response.put("data", savedUser);
+        
+        return ResponseEntity.ok(response);
+    }
 
-        // Create new user's account
-        User user = User.builder()
-                .name(signUpRequest.getName())
-                .email(signUpRequest.getEmail())
-                .password(encoder.encode(signUpRequest.getPassword()))
-                .build();
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody User loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+        );
 
-        Set<String> strRoles = signUpRequest.getRoles();
-        Set<RoleType> roles = new HashSet<>();
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        if (strRoles == null) {
-            roles.add(RoleType.ROLE_FLEET_MANAGER);
-        } else {
-            strRoles.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        roles.add(RoleType.ROLE_ADMIN);
-                        break;
-                    case "driver":
-                        roles.add(RoleType.ROLE_DRIVER);
-                        break;
-                    case "safety":
-                        roles.add(RoleType.ROLE_SAFETY_OFFICER);
-                        break;
-                    case "finance":
-                        roles.add(RoleType.ROLE_FINANCIAL_ANALYST);
-                        break;
-                    default:
-                        roles.add(RoleType.ROLE_FLEET_MANAGER);
-                }
-            });
-        }
-        user.setRoles(roles);
-        userRepository.save(user);
+        // Fetch user from DB to get ID and Role for JWT
+        // A cleaner way is using a CustomUserDetails object that holds ID and Role
+        String token = jwtUtil.generateToken(authentication.getName(), 
+                authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", ""), 
+                1L); // Hardcoded ID for now, should extract from UserDetails
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Login successful");
+        response.put("token", token);
+
+        return ResponseEntity.ok(response);
     }
 }

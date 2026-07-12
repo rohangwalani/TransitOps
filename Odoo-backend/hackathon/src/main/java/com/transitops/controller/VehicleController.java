@@ -1,57 +1,61 @@
 package com.transitops.controller;
 
-import com.transitops.dto.request.VehicleRequestDTO;
-import com.transitops.dto.response.MessageResponse;
-import com.transitops.dto.response.VehicleResponseDTO;
+import com.transitops.entity.Vehicle;
 import com.transitops.service.VehicleService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
-@RequestMapping("/api/v1/vehicles")
-@RequiredArgsConstructor
+@RequestMapping("/api/vehicles")
+@PreAuthorize("hasAnyRole('FLEET_MANAGER', 'DISPATCHER')")
+@CrossOrigin(origins = "*")
 public class VehicleController {
 
     private final VehicleService vehicleService;
 
-    @PostMapping
-    @PreAuthorize("hasRole('FLEET_MANAGER') or hasRole('ADMIN')")
-    public ResponseEntity<VehicleResponseDTO> createVehicle(@Valid @RequestBody VehicleRequestDTO requestDTO) {
-        VehicleResponseDTO createdVehicle = vehicleService.createVehicle(requestDTO);
-        return new ResponseEntity<>(createdVehicle, HttpStatus.CREATED);
+    public VehicleController(VehicleService vehicleService) {
+        this.vehicleService = vehicleService;
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('FLEET_MANAGER') or hasRole('ADMIN') or hasRole('DRIVER')")
-    public ResponseEntity<Page<VehicleResponseDTO>> getAllVehicles(Pageable pageable) {
-        Page<VehicleResponseDTO> vehicles = vehicleService.getAllVehicles(pageable);
-        return ResponseEntity.ok(vehicles);
+    public ResponseEntity<?> getAllVehicles() {
+        return ResponseEntity.ok(vehicleService.getAllVehicles());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('FLEET_MANAGER') or hasRole('ADMIN') or hasRole('DRIVER')")
-    public ResponseEntity<VehicleResponseDTO> getVehicleById(@PathVariable Long id) {
-        VehicleResponseDTO vehicle = vehicleService.getVehicleById(id);
-        return ResponseEntity.ok(vehicle);
+    public ResponseEntity<?> getVehicleById(@PathVariable Long id) {
+        return ResponseEntity.ok(vehicleService.getVehicleById(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createVehicle(@RequestBody Vehicle vehicle) {
+        Vehicle saved = vehicleService.createVehicle(vehicle);
+        return buildSuccessResponse("Vehicle created successfully", saved);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('FLEET_MANAGER') or hasRole('ADMIN')")
-    public ResponseEntity<VehicleResponseDTO> updateVehicle(@PathVariable Long id, @Valid @RequestBody VehicleRequestDTO requestDTO) {
-        VehicleResponseDTO updatedVehicle = vehicleService.updateVehicle(id, requestDTO);
-        return ResponseEntity.ok(updatedVehicle);
+    public ResponseEntity<?> updateVehicle(@PathVariable Long id, @RequestBody Vehicle vehicle) {
+        Vehicle updated = vehicleService.updateVehicle(id, vehicle);
+        return buildSuccessResponse("Vehicle updated successfully", updated);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('FLEET_MANAGER') or hasRole('ADMIN')")
-    public ResponseEntity<MessageResponse> deleteVehicle(@PathVariable Long id) {
+    public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
         vehicleService.deleteVehicle(id);
-        return ResponseEntity.ok(new MessageResponse("Vehicle successfully retired/deleted"));
+        return buildSuccessResponse("Vehicle deleted successfully", null);
+    }
+
+    private ResponseEntity<?> buildSuccessResponse(String message, Object data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", message);
+        if (data != null) {
+            response.put("data", data);
+        }
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,40 +1,50 @@
 package com.transitops.entity;
 
-import com.transitops.enums.VehicleStatus;
+import com.transitops.enums.TripStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "vehicles")
+@Table(name = "trips")
 @Data
-public class Vehicle {
+public class Trip {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String registrationNumber;
+    private String tripCode;
 
     @Column(nullable = false)
-    private String model;
+    private String source;
 
     @Column(nullable = false)
-    private String vehicleType;
+    private String destination;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_id", nullable = false)
+    private Vehicle vehicle;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "driver_id", nullable = false)
+    private Driver driver;
 
     @Column(nullable = false)
-    private Double capacity;
+    private Double cargoWeight;
 
     @Column(nullable = false)
-    private Double odometer;
+    private Double plannedDistance;
 
-    @Column(nullable = false)
-    private Double acquisitionCost;
+    private Double actualDistance;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private VehicleStatus status = VehicleStatus.AVAILABLE;
+    private TripStatus status = TripStatus.DRAFT;
+
+    private LocalDateTime dispatchTime;
+    private LocalDateTime completionTime;
 
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt = LocalDateTime.now();
