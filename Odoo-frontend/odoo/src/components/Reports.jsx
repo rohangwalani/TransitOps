@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Table from './common/Table';
 import StatusBadge from './common/StatusBadge';
 
-const Reports = () => {
+const Reports = ({ searchQuery = '' }) => {
   // Atmospheric background tracking
   const [bgStyle, setBgStyle] = useState({});
   const containerRef = useRef(null);
@@ -20,6 +20,8 @@ const Reports = () => {
   const [viewMode, setViewMode] = useState('realtime'); // 'realtime' or 'historical'
   const [utilizationCategory, setUtilizationCategory] = useState('All Assets');
   const [filterText, setFilterText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
 
   // Track mouse movement for subtle atmosphere gradient shift
   const handleMouseMove = (e) => {
@@ -90,6 +92,7 @@ const Reports = () => {
 
   // Fleet performance table data
   const vehiclePerformanceData = [
+    // Page 1
     {
       id: 'TRK-2901',
       status: 'completed',
@@ -126,14 +129,97 @@ const Reports = () => {
       avgSpeed: '55 mph',
       efficiency: 89,
     },
+    // Page 2
+    {
+      id: 'TRK-5501',
+      status: 'completed',
+      label: 'ON ROUTE',
+      distance: '1,102.3',
+      fuel: '134.5',
+      avgSpeed: '60 mph',
+      efficiency: 95,
+    },
+    {
+      id: 'VAN-0221',
+      status: 'completed',
+      label: 'ON ROUTE',
+      distance: '654.8',
+      fuel: '32.1',
+      avgSpeed: '38 mph',
+      efficiency: 84,
+    },
+    {
+      id: 'TRK-7711',
+      status: 'inactive',
+      label: 'Idle',
+      distance: '1,450.2',
+      fuel: '180.4',
+      avgSpeed: '52 mph',
+      efficiency: 87,
+    },
+    {
+      id: 'VAN-0899',
+      status: 'warning',
+      label: 'Maintenance',
+      distance: '0.0',
+      fuel: '0.0',
+      avgSpeed: '--',
+      efficiency: 50,
+    },
+    // Page 3
+    {
+      id: 'TRK-1234',
+      status: 'completed',
+      label: 'ON ROUTE',
+      distance: '980.4',
+      fuel: '110.2',
+      avgSpeed: '56 mph',
+      efficiency: 90,
+    },
+    {
+      id: 'VAN-0654',
+      status: 'completed',
+      label: 'ON ROUTE',
+      distance: '430.5',
+      fuel: '21.4',
+      avgSpeed: '32 mph',
+      efficiency: 82,
+    },
+    {
+      id: 'TRK-9876',
+      status: 'warning',
+      label: 'Maintenance',
+      distance: '0.0',
+      fuel: '0.0',
+      avgSpeed: '--',
+      efficiency: 40,
+    },
+    {
+      id: 'VAN-0112',
+      status: 'inactive',
+      label: 'Idle',
+      distance: '1,890.3',
+      fuel: '210.9',
+      avgSpeed: '50 mph',
+      efficiency: 85,
+    },
   ];
 
   // Filter vehicles
   const filteredVehicles = vehiclePerformanceData.filter(
     (vehicle) =>
-      vehicle.id.toLowerCase().includes(filterText.toLowerCase()) ||
-      vehicle.label.toLowerCase().includes(filterText.toLowerCase())
+      vehicle.id.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (vehicle.id.toLowerCase().includes(filterText.toLowerCase()) ||
+       vehicle.label.toLowerCase().includes(filterText.toLowerCase()))
   );
+
+  // Paginated Vehicles (4 per page)
+  const itemsPerPage = 4;
+  const paginatedVehicles = filteredVehicles.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   // Table Columns
   const tableColumns = [
@@ -452,18 +538,49 @@ const Reports = () => {
           </div>
         </div>
 
-        <Table columns={tableColumns} data={filteredVehicles} emptyMessage="No vehicles match the filter criteria." />
+        <Table columns={tableColumns} data={paginatedVehicles} emptyMessage="No vehicles match the filter criteria." />
 
         <div className="p-4 bg-surface-container-lowest border-t border-outline-variant flex justify-between items-center">
-          <p className="text-xs text-outline">Showing {filteredVehicles.length} of {vehiclePerformanceData.length} vehicles</p>
+          <p className="text-xs text-outline">
+            Showing {filteredVehicles.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-{Math.min(currentPage * itemsPerPage, filteredVehicles.length)} of {filteredVehicles.length} vehicles
+          </p>
           <div className="flex gap-1">
-            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container transition-all">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container transition-all disabled:opacity-30"
+            >
               <span className="material-symbols-outlined text-sm">chevron_left</span>
             </button>
-            <button className="w-8 h-8 flex items-center justify-center bg-primary text-white rounded font-bold text-xs">1</button>
-            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container transition-all text-xs">2</button>
-            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container transition-all text-xs">3</button>
-            <button className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container transition-all">
+            <button
+              onClick={() => setCurrentPage(1)}
+              className={`w-8 h-8 flex items-center justify-center rounded font-bold text-xs transition-all ${
+                currentPage === 1 ? 'bg-primary text-white' : 'border border-outline-variant hover:bg-surface-container'
+              }`}
+            >
+              1
+            </button>
+            <button
+              onClick={() => setCurrentPage(2)}
+              className={`w-8 h-8 flex items-center justify-center rounded font-bold text-xs transition-all ${
+                currentPage === 2 ? 'bg-primary text-white' : 'border border-outline-variant hover:bg-surface-container'
+              }`}
+            >
+              2
+            </button>
+            <button
+              onClick={() => setCurrentPage(3)}
+              className={`w-8 h-8 flex items-center justify-center rounded font-bold text-xs transition-all ${
+                currentPage === 3 ? 'bg-primary text-white' : 'border border-outline-variant hover:bg-surface-container'
+              }`}
+            >
+              3
+            </button>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, 3))}
+              disabled={currentPage === 3}
+              className="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container transition-all disabled:opacity-30"
+            >
               <span className="material-symbols-outlined text-sm">chevron_right</span>
             </button>
           </div>

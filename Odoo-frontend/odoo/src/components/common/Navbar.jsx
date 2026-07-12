@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Navbar = ({ user, onLogout, toggleSidebar }) => {
+const Navbar = ({ user, onLogout, toggleSidebar, searchQuery = '', onSearchChange }) => {
   // Format displaying role name (e.g. fleet_manager -> Fleet Manager)
   const formatRole = (role) => {
     if (!role) return 'Fleet Manager';
@@ -30,6 +30,8 @@ const Navbar = ({ user, onLogout, toggleSidebar }) => {
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
             placeholder="Search fleet, drivers, or trips..." 
             className="w-full bg-surface-container-lowest border-outline-variant border rounded-lg py-2 pl-10 pr-4 text-body-md focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
           />

@@ -114,6 +114,13 @@ const FuelExpenses = () => {
     };
   });
 
+  const filteredTransactions = recentTransactions.filter(
+    (tx) =>
+      tx.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.plate.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+
   const tableColumns = [
     {
       title: 'Transaction Date',
