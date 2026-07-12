@@ -5,6 +5,7 @@ import Navbar from '../components/common/Navbar';
 import ToastContainer from '../components/common/ToastContainer';
 import { useTransitOps } from '../hooks/TransitOpsContext';
 import authService from '../services/authService';
+import { ChatWidget } from '../components/common/ChatWidget';
 
 export const DashboardLayout = () => {
   const { searchQuery, setSearchQuery } = useTransitOps();
@@ -127,6 +128,9 @@ export const DashboardLayout = () => {
           </footer>
         </main>
       </div>
+
+      {/* Global Chatbot widget */}
+      <ChatWidget />
 
       {/* Global Toast Alerts */}
       <ToastContainer />
