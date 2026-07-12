@@ -149,7 +149,7 @@ const Maintenance = () => {
                   <p className="text-body-md text-on-surface-variant mb-4">{task.description}</p>
                   
                   <div className="flex items-center justify-between border-t border-outline-variant/20 pt-3 mt-3">
-                    <span className="font-body-md text-primary font-bold font-mono">${task.cost}</span>
+                    <span className="font-body-md text-primary font-bold font-mono">₹{task.cost}</span>
                     <button 
                       onClick={() => handleTaskStatusChange(task.id, 'In Progress')}
                       className="px-2.5 py-1 bg-primary-container text-white text-xs font-bold rounded shadow-sm hover:opacity-90 transition-all"
@@ -213,7 +213,7 @@ const Maintenance = () => {
                   )}
 
                   <div className="flex items-center justify-between border-t border-outline-variant/20 pt-3 mt-3">
-                    <span className="font-body-md text-primary font-bold font-mono">${task.cost}</span>
+                    <span className="font-body-md text-primary font-bold font-mono">₹{task.cost}</span>
                     <button 
                       onClick={() => completeMaintenance(task.id, task.cost)}
                       className="px-2.5 py-1 bg-secondary text-white text-xs font-bold rounded shadow-sm hover:opacity-90 transition-all cursor-pointer"
@@ -267,7 +267,7 @@ const Maintenance = () => {
                     <span className="text-label-sm font-bold text-secondary uppercase font-mono">
                       {task.date || 'COMPLETED'}
                     </span>
-                    <span className="font-body-md text-outline font-bold font-mono">${task.cost}</span>
+                    <span className="font-body-md text-outline font-bold font-mono">₹{task.cost}</span>
                   </div>
                 </div>
               ))}

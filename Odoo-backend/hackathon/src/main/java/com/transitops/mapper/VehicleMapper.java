@@ -5,7 +5,6 @@ import com.transitops.dto.response.VehicleResponseDTO;
 import com.transitops.entity.Vehicle;
 import com.transitops.enums.VehicleStatus;
 import org.springframework.stereotype.Component;
-
 @Component
 public class VehicleMapper {
 

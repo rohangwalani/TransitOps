@@ -175,7 +175,7 @@ const FuelExpenses = () => {
         <div className="col-span-12 md:col-span-6 lg:col-span-3">
           <KPICard
             title="Total Expenses"
-            value={`$${totalAllCosts.toLocaleString()}`}
+            value={`₹${totalAllCosts.toLocaleString('en-IN')}`}
             icon="monetization_on"
             iconBgClass="bg-primary-fixed text-primary"
             subtext="Fuel & Repairs combined"
@@ -210,7 +210,7 @@ const FuelExpenses = () => {
         <div className="col-span-12 md:col-span-6 lg:col-span-3">
           <KPICard
             title="Total Maintenance Cost"
-            value={`$${totalMaintCost.toLocaleString()}`}
+            value={`₹${totalMaintCost.toLocaleString('en-IN')}`}
             icon="build"
             iconBgClass="bg-error-container text-error"
             subtext="Repairs cost logs"
