@@ -71,10 +71,6 @@ const Navbar = ({ user, onLogout, toggleSidebar, searchQuery = '', onSearchChang
 
         {/* User profile block */}
         <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <p className="font-body-md text-body-md font-bold text-on-background">{displayName}</p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">{displayRole}</p>
-          </div>
           <div className="relative" ref={dropdownRef}>
             <img 
               onClick={() => setDropdownOpen(!dropdownOpen)}
