@@ -10,11 +10,13 @@ const Drivers = () => {
     addDriver, 
     editDriver, 
     deleteDriver,
-    triggerToast 
+    triggerToast,
+    searchQuery
   } = useTransitOps();
 
   // Search, Filters, Sorting, and Pagination States
-  const [searchQuery, setSearchQuery] = useState('');
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const activeSearchQuery = searchQuery || localSearchQuery;
   const [statusFilter, setStatusFilter] = useState('All');
   const [sortOrder, setSortOrder] = useState('safety_desc');
   const [viewMode, setViewMode] = useState('grid');
@@ -134,7 +136,7 @@ const Drivers = () => {
 
   // Filters, Sort, and Search queries
   const searchedDrivers = drivers.filter(d => {
-    const query = searchQuery.toLowerCase();
+    const query = activeSearchQuery.toLowerCase();
     return (
       d.name.toLowerCase().includes(query) ||
       d.licenseNumber.toLowerCase().includes(query) ||
@@ -368,8 +370,8 @@ const Drivers = () => {
             <input
               type="text"
               placeholder="Search drivers..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+              value={activeSearchQuery}
+              onChange={(e) => { setLocalSearchQuery(e.target.value); setCurrentPage(1); }}
               className="pl-8 pr-3 py-2 bg-white border border-outline-variant rounded-lg text-body-md w-48 outline-none focus:ring-2 focus:ring-primary/20"
             />
           </div>

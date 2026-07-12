@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Table from './common/Table';
 import StatusBadge from './common/StatusBadge';
+import { useTransitOps } from '../hooks/TransitOpsContext';
 
-const Reports = ({ searchQuery = '' }) => {
+const Reports = () => {
+  const { searchQuery = '' } = useTransitOps() || {};
   // Atmospheric background tracking
   const [bgStyle, setBgStyle] = useState({});
   const containerRef = useRef(null);

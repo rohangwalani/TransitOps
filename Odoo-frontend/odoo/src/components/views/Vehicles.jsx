@@ -12,11 +12,13 @@ const Vehicles = () => {
     addVehicle, 
     editVehicle, 
     deleteVehicle,
-    triggerToast 
+    triggerToast,
+    searchQuery
   } = useTransitOps();
 
   // Search, Sorting, Filtering, and Pagination States
-  const [searchQuery, setSearchQuery] = useState('');
+  const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const activeSearchQuery = searchQuery || localSearchQuery;
   const [activeTab, setActiveTab] = useState('all');
   const [sortField, setSortField] = useState('name');
   const [currentPage, setCurrentPage] = useState(1);
@@ -223,7 +225,7 @@ const Vehicles = () => {
 
   // Filter, Sort, and Search queries
   const searchedVehicles = vehicles.filter(v => {
-    const query = searchQuery.toLowerCase();
+    const query = activeSearchQuery.toLowerCase();
     return (
       v.name.toLowerCase().includes(query) ||
       v.registrationNumber.toLowerCase().includes(query) ||
@@ -341,8 +343,8 @@ const Vehicles = () => {
               <input
                 type="text"
                 placeholder="Search assets..."
-                value={searchQuery}
-                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                value={activeSearchQuery}
+                onChange={(e) => { setLocalSearchQuery(e.target.value); setCurrentPage(1); }}
                 className="pl-8 pr-3 py-1.5 bg-white border border-outline-variant rounded-lg text-xs w-48 outline-none focus:ring-1 focus:ring-primary focus:border-transparent transition-all"
               />
             </div>

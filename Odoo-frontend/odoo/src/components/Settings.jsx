@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTransitOps } from '../hooks/TransitOpsContext';
 
 const Settings = () => {
   const { triggerToast } = useTransitOps();
   const [activeSubTab, setActiveSubTab] = useState('account');
+  const fileInputRef = useRef(null);
+  
+  // Default corporate portrait from user dashboard HTML
+  const [profileImg, setProfileImg] = useState(
+    "https://lh3.googleusercontent.com/aida-public/AB6AXuCDNH81NEYgB9TZOK_MydQrV7XbwtbPD-nsRql4IelRXdvd8cJyrfjoc3uFRPu1dbMfhtid5uWKADnVHcI8YbdddAMpLbrtH-nKb-bOB-w1wyxQsXnRO5f2rZ9w-SSDLW4kvGrJ9W5RC51cg0HT5fawRVCGmYBlEuwA8WdLKCgdNJZjG9V2LnY3sp7DtpqRYO8z8r0UvNRUSJj7hRbEvYJM2FjHb7KQEK-R_-5MoNsRoHSq0muKpQkoLg"
+  );
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImg(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Form State
   const getInitialUser = () => {
@@ -17,6 +34,24 @@ const Settings = () => {
 
   const activeUser = getInitialUser();
 
+  const formatRole = (role) => {
+    if (!role) return 'Fleet Manager';
+    return role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+  const rawRole = activeUser?.selectedRole || activeUser?.role || (activeUser?.roles?.[0] ?? 'fleet_manager');
+  const displayRole = formatRole(rawRole?.replace('ROLE_', '').toLowerCase());
+
+  const getInitialCompanyProfile = () => {
+    try {
+      const data = localStorage.getItem('company_profile');
+      return data ? JSON.parse(data) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const companyProfile = getInitialCompanyProfile();
+
   const initialFormState = {
     fullName: activeUser.name || 'Alex Sterling',
     email: activeUser.email || 'alex@transitops.io',
@@ -29,7 +64,7 @@ const Settings = () => {
     dailyOpsDigest: false,
     
     // Security & Privacy details
-    loginEmail: 'jane.doe@transitops.io',
+    loginEmail: activeUser.email || 'alex@transitops.io',
     recoveryPhone: '+1 (555) 902-3482',
     currentPassword: '',
     newPassword: '',
@@ -37,13 +72,13 @@ const Settings = () => {
     enable2FA: true,
 
     // Company profile details
-    companyName: 'TransitOps Enterprise Logistics',
-    companyRegNo: 'TO-992188-B',
-    companyIndustry: 'Supply Chain & Third-Party Logistics (3PL)',
-    companyHQ: '100 Logistics Blvd, Suite 400, Chicago, IL 60601',
-    companyWebsite: 'https://transitops.io',
-    companyEmail: 'operations@transitops.io',
-    companyAbout: 'TransitOps is a leading global supply chain partner specializing in automated fleet tracking, freight brokerage integration, and next-generation route optimization. Founded in 2018, our mission is to deliver seamless end-to-end logistics solutions powered by machine learning and real-time operations dashboards. Today, we manage over 5,000 active vehicles spanning freightliners, commercial sprinters, and last-mile delivery vans across North America.',
+    companyName: companyProfile.companyName || '',
+    companyRegNo: companyProfile.companyRegNo || '',
+    companyIndustry: companyProfile.companyIndustry || '',
+    companyHQ: companyProfile.companyHQ || '',
+    companyWebsite: companyProfile.companyWebsite || '',
+    companyEmail: companyProfile.companyEmail || '',
+    companyAbout: companyProfile.companyAbout || '',
   };
 
   const [formData, setFormData] = useState({ ...initialFormState });
@@ -67,6 +102,18 @@ const Settings = () => {
         contact: formData.contactNumber
       };
       localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      const updatedCompanyProfile = {
+        companyName: formData.companyName,
+        companyRegNo: formData.companyRegNo,
+        companyIndustry: formData.companyIndustry,
+        companyHQ: formData.companyHQ,
+        companyWebsite: formData.companyWebsite,
+        companyEmail: formData.companyEmail,
+        companyAbout: formData.companyAbout,
+      };
+      localStorage.setItem('company_profile', JSON.stringify(updatedCompanyProfile));
+
       // Dispatch storage event to alert persistent navbar
       window.dispatchEvent(new Event('user-profile-update'));
       triggerToast('Settings updated successfully.', 'success');
@@ -131,7 +178,7 @@ const Settings = () => {
                     <div className="w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-lg">
                       <img
                         className="w-full h-full object-cover"
-                        alt="Jane Doe profile"
+                        alt={`${formData.fullName} profile`}
                         src={profileImg}
                       />
                     </div>
@@ -150,8 +197,10 @@ const Settings = () => {
                     />
                   </div>
                   <div>
-                    <h3 className="font-headline-md text-headline-md text-on-surface">Jane Doe</h3>
-                    <p className="text-on-surface-variant font-body-md">Senior Logistics Operations Manager</p>
+                    <h3 className="font-headline-md text-headline-md text-on-surface">{formData.fullName}</h3>
+                    <p className="text-on-surface-variant font-body-md">
+                      {displayRole}
+                    </p>
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
                       <span className="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-md text-[10px] uppercase font-semibold">
                         Verified Account
@@ -195,7 +244,8 @@ const Settings = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                        disabled
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none opacity-60 cursor-not-allowed"
                       />
                     </div>
                     <div>
@@ -414,7 +464,8 @@ const Settings = () => {
                         name="loginEmail"
                         value={formData.loginEmail}
                         onChange={handleInputChange}
-                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none"
+                        disabled
+                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:ring-primary focus:border-primary transition-all focus:ring-2 outline-none opacity-60 cursor-not-allowed"
                       />
                     </div>
                     <div>

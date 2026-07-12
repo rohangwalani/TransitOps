@@ -11,7 +11,8 @@ const FuelExpenses = () => {
     trips, 
     maintenance, 
     addFuelLog,
-    triggerToast 
+    triggerToast,
+    searchQuery
   } = useTransitOps();
 
   const [activeTab, setActiveTab] = useState('Week');
@@ -114,7 +115,7 @@ const FuelExpenses = () => {
     };
   });
 
-  const filteredTransactions = recentTransactions.filter(
+  const filteredTransactions = mappedTransactions.filter(
     (tx) =>
       tx.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tx.plate.toLowerCase().includes(searchQuery.toLowerCase())
@@ -319,7 +320,7 @@ const FuelExpenses = () => {
             </div>
           </div>
 
-          <Table columns={tableColumns} data={mappedTransactions} />
+          <Table columns={tableColumns} data={filteredTransactions} />
 
           <div className="p-unit-md border-t border-outline-variant flex justify-center bg-surface-container-lowest select-none">
             <button

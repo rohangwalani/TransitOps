@@ -66,13 +66,13 @@ const Dashboard = () => {
   const renderActiveView = () => {
     switch (activeMenu) {
       case 'vehicles':
-        return <Vehicles />;
+        return <Vehicles searchQuery={searchQuery} />;
       case 'drivers':
-        return <Drivers />;
+        return <Drivers searchQuery={searchQuery} />;
       case 'trips':
-        return <Trips />;
+        return <Trips searchQuery={searchQuery} />;
       case 'maintenance':
-        return <Maintenance />;
+        return <Maintenance searchQuery={searchQuery} />;
       case 'fuel':
         return <FuelExpenses searchQuery={searchQuery} />;
       case 'reports':

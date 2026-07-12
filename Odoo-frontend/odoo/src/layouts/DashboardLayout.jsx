@@ -7,6 +7,7 @@ import { useTransitOps } from '../hooks/TransitOpsContext';
 import authService from '../services/authService';
 
 export const DashboardLayout = () => {
+  const { searchQuery, setSearchQuery } = useTransitOps();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -105,6 +106,8 @@ export const DashboardLayout = () => {
           user={user} 
           onLogout={handleLogout} 
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
 
         {/* Content Canvas */}
