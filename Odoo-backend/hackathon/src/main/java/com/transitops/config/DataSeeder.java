@@ -31,8 +31,8 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (userRepository.count() > 0) {
-            log.info("Database already seeded. Skipping data generation.");
+        if (vehicleRepository.count() > 0 && driverRepository.count() > 0) {
+            log.info("Database already seeded with vehicles/drivers. Skipping dummy data generation.");
             return;
         }
 
@@ -56,7 +56,7 @@ public class DataSeeder implements CommandLineRunner {
                 .model("FH16")
                 .year(2022)
                 .type(VehicleType.HEAVY_DUTY)
-                .status(VehicleStatus.ACTIVE)
+                .status(VehicleStatus.AVAILABLE)
                 .maxLoadCapacity(20000.0)
                 .odometerReading(105000.0) // High enough to trigger maintenance if last service was 90000
                 .acquisitionCost(150000.0)
@@ -72,7 +72,7 @@ public class DataSeeder implements CommandLineRunner {
                 .model("Transit")
                 .year(2023)
                 .type(VehicleType.VAN)
-                .status(VehicleStatus.ACTIVE)
+                .status(VehicleStatus.AVAILABLE)
                 .maxLoadCapacity(3000.0)
                 .odometerReading(12000.0)
                 .acquisitionCost(45000.0)
