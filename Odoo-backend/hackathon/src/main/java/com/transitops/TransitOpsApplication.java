@@ -1,13 +1,13 @@
-package com.example.hackathon.hackathon;
+package com.transitops;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HackathonApplication {
+public class TransitOpsApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(HackathonApplication.class, args);
+		SpringApplication.run(TransitOpsApplication.class, args);
 	}
 
 }
