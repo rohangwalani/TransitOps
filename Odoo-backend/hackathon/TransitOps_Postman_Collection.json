@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "f5b66d4f-3701-4be5-a131-08149e6f1f46",
     "name": "TransitOps API",
-    "description": "Postman collection for TransitOps API testing including Auth and Vehicle Management.",
+    "description": "Postman collection for TransitOps API testing including Auth, Vehicle, and Driver Management.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -284,6 +284,192 @@
                 "v1",
                 "vehicles",
                 "{{vehicle_id}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Driver Management",
+      "item": [
+        {
+          "name": "8. Create Driver",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "var jsonData = pm.response.json();",
+                  "pm.environment.set(\"driver_id\", jsonData.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alex Johnson\",\n  \"licenseNumber\": \"LIC-987654321\",\n  \"licenseCategory\": \"Heavy\",\n  \"licenseExpiryDate\": \"2030-12-31\",\n  \"contactNumber\": \"+1-555-1234\",\n  \"safetyScore\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "9. Get All Drivers",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10. Get Driver By Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers",
+                "{{driver_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11. Update Driver",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alex Johnson\",\n  \"licenseNumber\": \"LIC-987654321\",\n  \"licenseCategory\": \"Heavy\",\n  \"licenseExpiryDate\": \"2030-12-31\",\n  \"contactNumber\": \"+1-555-1234\",\n  \"safetyScore\": 95,\n  \"status\": \"OFF_DUTY\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers",
+                "{{driver_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12. Delete Driver",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/drivers/{{driver_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "drivers",
+                "{{driver_id}}"
               ]
             }
           },
