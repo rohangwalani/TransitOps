@@ -1,6 +1,6 @@
 package com.transitops.entity;
 
-import com.transitops.enums.MaintenanceStatus;
+import com.transitops.enums.DriverStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,57 +11,56 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE maintenance_records SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
-@Table(name = "maintenance_records")
+@Table(name = "drivers", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "licenseNumber")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Maintenance {
+public class Driver {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String licenseNumber;
+
+    private String licenseCategory;
 
     @Column(nullable = false)
-    private String maintenanceType; // e.g., "Routine", "Repair", "Oil Change", "Tire Replacement"
+    private LocalDate licenseExpiryDate;
 
-    @Column(nullable = false)
-    private String description;
+    private String contactNumber;
 
-    private Double estimatedCost;
-
-    private Double actualCost;
-
-    @Column(nullable = false)
-    private LocalDate scheduledDate;
-
-    private LocalDate completedDate;
-
-    // Added for Predictive Maintenance
-    private Double odometerAtService;
+    private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private MaintenanceStatus status = MaintenanceStatus.SCHEDULED;
+    private DriverStatus status = DriverStatus.AVAILABLE;
 
-    private String technicianName;
+    // Safety score 0-100
+    @Builder.Default
+    private Integer safetyScore = 100;
 
-    private String workshopName;
+    // Total trips completed
+    @Builder.Default
+    private Integer totalTrips = 0;
+
+    // For Leaflet map integration
+    private Double latitude;
+    private Double longitude;
 
     private String notes;
 
@@ -78,8 +77,4 @@ public class Maintenance {
 
     @LastModifiedBy
     private String updatedBy;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean deleted = false;
 }

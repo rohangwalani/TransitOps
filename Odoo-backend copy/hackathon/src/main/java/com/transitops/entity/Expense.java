@@ -1,6 +1,5 @@
 package com.transitops.entity;
 
-import com.transitops.enums.MaintenanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,49 +18,42 @@ import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE maintenance_records SET deleted = true WHERE id=?")
+@SQLDelete(sql = "UPDATE expenses SET deleted = true WHERE id=?")
 @Where(clause = "deleted=false")
-@Table(name = "maintenance_records")
+@Table(name = "expenses")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Maintenance {
+public class Expense {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
+    @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id")
+    private Trip trip;
+
     @Column(nullable = false)
-    private String maintenanceType; // e.g., "Routine", "Repair", "Oil Change", "Tire Replacement"
+    private String category; // e.g., "Fuel", "Maintenance", "Toll", "Insurance", "Driver Allowance", "Miscellaneous"
+
+    @Column(nullable = false)
+    private Double amount;
 
     @Column(nullable = false)
     private String description;
 
-    private Double estimatedCost;
-
-    private Double actualCost;
-
     @Column(nullable = false)
-    private LocalDate scheduledDate;
+    private LocalDate date;
 
-    private LocalDate completedDate;
+    private String vendor;
 
-    // Added for Predictive Maintenance
-    private Double odometerAtService;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private MaintenanceStatus status = MaintenanceStatus.SCHEDULED;
-
-    private String technicianName;
-
-    private String workshopName;
+    private String receiptNumber;
 
     private String notes;
 

@@ -1,0 +1,24 @@
+# Gradle files
+**/.gradle/
+**/build/
+
+# IDE files
+**/.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+**/out/
+
+# Compiled Java classes
+**/*.class
+
+# Package files
+**/*.jar
+**/*.war
+
+# Logs
+**/*.log
+
+# OS files
+.DS_Store
+Thumbs.db

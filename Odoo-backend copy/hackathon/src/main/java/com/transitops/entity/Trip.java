@@ -1,6 +1,6 @@
 package com.transitops.entity;
 
-import com.transitops.enums.MaintenanceStatus;
+import com.transitops.enums.TripStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,59 +11,69 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE maintenance_records SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
-@Table(name = "maintenance_records")
+@Table(name = "trips")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Maintenance {
+public class Trip {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
+    private String source;
+
+    @Column(nullable = false)
+    private String destination;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id", nullable = false)
+    private Driver driver;
+
+    // Cargo weight in kg - must not exceed vehicle maxLoadCapacity
     @Column(nullable = false)
-    private String maintenanceType; // e.g., "Routine", "Repair", "Oil Change", "Tire Replacement"
+    private Double cargoWeight;
 
-    @Column(nullable = false)
-    private String description;
+    // Planned distance in km
+    private Double plannedDistance;
 
-    private Double estimatedCost;
+    // Actual distance driven (set on completion)
+    private Double actualDistance;
 
-    private Double actualCost;
-
-    @Column(nullable = false)
-    private LocalDate scheduledDate;
-
-    private LocalDate completedDate;
-
-    // Added for Predictive Maintenance
-    private Double odometerAtService;
+    // Fuel consumed in liters (set on completion)
+    private Double fuelConsumed;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private MaintenanceStatus status = MaintenanceStatus.SCHEDULED;
+    private TripStatus status = TripStatus.DRAFT;
 
-    private String technicianName;
+    private LocalDateTime startTime;
 
-    private String workshopName;
+    private LocalDateTime endTime;
 
-    private String notes;
+    private LocalDateTime estimatedArrival;
+
+    private String remarks;
+
+    // Source coordinates for map telemetry
+    private Double sourceLat;
+    private Double sourceLng;
+
+    // Destination coordinates for map telemetry
+    private Double destLat;
+    private Double destLng;
 
     @CreatedDate
     @Column(updatable = false)
@@ -78,8 +88,4 @@ public class Maintenance {
 
     @LastModifiedBy
     private String updatedBy;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean deleted = false;
 }

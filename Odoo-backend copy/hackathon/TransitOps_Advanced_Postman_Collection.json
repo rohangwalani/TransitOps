@@ -1,0 +1,156 @@
+{
+  "info": {
+    "name": "TransitOps - Predictive Maintenance",
+    "description": "Postman collection covering Success, Failure, and RBAC for Predictive Maintenance APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Predictive Maintenance",
+      "item": [
+        {
+          "name": "Predict Maintenance for Vehicle (Admin - Success)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/maintenance/predict/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "maintenance",
+                "predict",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Predict Maintenance for Vehicle (Driver - Forbidden)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{driver_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/maintenance/predict/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "maintenance",
+                "predict",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Predict Maintenance for Vehicle (Invalid ID - 404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/maintenance/predict/999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "maintenance",
+                "predict",
+                "999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Predict All Vehicles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/maintenance/predict",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "maintenance",
+                "predict"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "High Risk Vehicles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/maintenance/high-risk",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "maintenance",
+                "high-risk"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "admin_token",
+      "value": "YOUR_ADMIN_JWT_TOKEN"
+    },
+    {
+      "key": "driver_token",
+      "value": "YOUR_DRIVER_JWT_TOKEN"
+    }
+  ]
+}

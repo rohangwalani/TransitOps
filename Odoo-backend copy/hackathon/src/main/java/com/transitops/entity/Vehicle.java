@@ -1,6 +1,7 @@
 package com.transitops.entity;
 
-import com.transitops.enums.MaintenanceStatus;
+import com.transitops.enums.VehicleStatus;
+import com.transitops.enums.VehicleType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,57 +12,59 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE maintenance_records SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
-@Table(name = "maintenance_records")
+@Table(name = "vehicles", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "registrationNumber")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Maintenance {
+public class Vehicle {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
-
     @Column(nullable = false)
-    private String maintenanceType; // e.g., "Routine", "Repair", "Oil Change", "Tire Replacement"
+    private String name;
 
-    @Column(nullable = false)
-    private String description;
+    @Column(nullable = false, unique = true)
+    private String registrationNumber;
 
-    private Double estimatedCost;
+    private String model;
 
-    private Double actualCost;
+    private String make;
 
-    @Column(nullable = false)
-    private LocalDate scheduledDate;
-
-    private LocalDate completedDate;
-
-    // Added for Predictive Maintenance
-    private Double odometerAtService;
+    private Integer year;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private MaintenanceStatus status = MaintenanceStatus.SCHEDULED;
+    private VehicleType type = VehicleType.TRUCK;
 
-    private String technicianName;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private VehicleStatus status = VehicleStatus.AVAILABLE;
 
-    private String workshopName;
+    // Maximum load capacity in kg
+    @Column(nullable = false)
+    private Double maxLoadCapacity;
+
+    // Current odometer reading in km
+    @Builder.Default
+    private Double odometerReading = 0.0;
+
+    private Double acquisitionCost;
+
+    // For Leaflet map integration
+    private Double latitude;
+    private Double longitude;
 
     private String notes;
 
@@ -78,8 +81,4 @@ public class Maintenance {
 
     @LastModifiedBy
     private String updatedBy;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean deleted = false;
 }

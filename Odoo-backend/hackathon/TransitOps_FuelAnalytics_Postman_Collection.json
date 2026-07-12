@@ -1,0 +1,131 @@
+{
+  "info": {
+    "name": "TransitOps - Fuel Fraud & Anomaly Detection",
+    "description": "Postman collection covering Success, Failure, and RBAC for Fuel Analytics APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Fuel Analytics",
+      "item": [
+        {
+          "name": "Analyze Fuel Log (Admin - Success)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fuel/analyze/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fuel",
+                "analyze",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze Fuel Log (Driver - Forbidden)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{driver_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fuel/analyze/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fuel",
+                "analyze",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Suspicious Fuel Logs (Admin - Success)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fuel/anomalies",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fuel",
+                "anomalies"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Vehicle Fuel Statistics (Driver - Success)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{driver_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/fuel/statistics/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "fuel",
+                "statistics",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "admin_token",
+      "value": "YOUR_ADMIN_JWT_TOKEN"
+    },
+    {
+      "key": "driver_token",
+      "value": "YOUR_DRIVER_JWT_TOKEN"
+    }
+  ]
+}

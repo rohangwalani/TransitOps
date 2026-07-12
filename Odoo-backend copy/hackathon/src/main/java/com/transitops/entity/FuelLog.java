@@ -1,32 +1,27 @@
 package com.transitops.entity;
 
-import com.transitops.enums.MaintenanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE maintenance_records SET deleted = true WHERE id=?")
-@Where(clause = "deleted=false")
-@Table(name = "maintenance_records")
+@Table(name = "fuel_logs")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Maintenance {
+public class FuelLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,32 +31,31 @@ public class Maintenance {
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "trip_id")
+    private Trip trip;
+
+    // Fuel filled in liters
     @Column(nullable = false)
-    private String maintenanceType; // e.g., "Routine", "Repair", "Oil Change", "Tire Replacement"
+    private Double volumeLiters;
+
+    // Cost per liter
+    @Column(nullable = false)
+    private Double pricePerLiter;
+
+    // Total cost
+    @Column(nullable = false)
+    private Double totalCost;
 
     @Column(nullable = false)
-    private String description;
+    private LocalDate date;
 
-    private Double estimatedCost;
+    private String fuelStation;
 
-    private Double actualCost;
+    private String location;
 
-    @Column(nullable = false)
-    private LocalDate scheduledDate;
-
-    private LocalDate completedDate;
-
-    // Added for Predictive Maintenance
-    private Double odometerAtService;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private MaintenanceStatus status = MaintenanceStatus.SCHEDULED;
-
-    private String technicianName;
-
-    private String workshopName;
+    // Odometer reading at the time of fueling
+    private Double odometerReading;
 
     private String notes;
 
@@ -78,8 +72,4 @@ public class Maintenance {
 
     @LastModifiedBy
     private String updatedBy;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean deleted = false;
 }
