@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const Navbar = ({ user, onLogout, toggleSidebar, searchQuery = '', onSearchChange }) => {
   // Format displaying role name (e.g. fleet_manager -> Fleet Manager)
@@ -11,6 +11,22 @@ const Navbar = ({ user, onLogout, toggleSidebar, searchQuery = '', onSearchChang
   // Support both old (role) and new (selectedRole / roles[]) user formats
   const rawRole = user?.selectedRole || user?.role || (user?.roles?.[0] ?? 'fleet_manager');
   const displayRole = formatRole(rawRole?.replace('ROLE_', '').toLowerCase());
+  
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   // Default corporate portrait from user dashboard HTML
   const defaultAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuCDNH81NEYgB9TZOK_MydQrV7XbwtbPD-nsRql4IelRXdvd8cJyrfjoc3uFRPu1dbMfhtid5uWKADnVHcI8YbdddAMpLbrtH-nKb-bOB-w1wyxQsXnRO5f2rZ9w-SSDLW4kvGrJ9W5RC51cg0HT5fawRVCGmYBlEuwA8WdLKCgdNJZjG9V2LnY3sp7DtpqRYO8z8r0UvNRUSJj7hRbEvYJM2FjHb7KQEK-R_-5MoNsRoHSq0muKpQkoLg";
@@ -51,28 +67,28 @@ const Navbar = ({ user, onLogout, toggleSidebar, searchQuery = '', onSearchChang
           <button className="p-1 text-on-surface-variant hover:bg-surface-container-lowest rounded-full transition-colors flex items-center justify-center">
             <span className="material-symbols-outlined">help_outline</span>
           </button>
-          
-          <button className="font-body-md text-body-md text-primary font-semibold hover:underline">Support</button>
         </div>
 
         {/* User profile block */}
         <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <p className="font-body-md text-body-md font-bold text-on-background">{displayName}</p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">{displayRole}</p>
-          </div>
-          <div className="relative group">
+          <div className="relative" ref={dropdownRef}>
             <img 
-              className="w-10 h-10 rounded-full border-2 border-primary-fixed object-cover cursor-pointer" 
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-10 h-10 rounded-full border-2 border-primary-fixed object-cover cursor-pointer hover:opacity-85 active:scale-95 transition-all" 
               src={defaultAvatar} 
               alt={displayName}
+              title="Profile Actions"
             />
-            {/* Quick logout hover menu */}
-            {onLogout && (
+            {/* Quick logout dropdown menu */}
+            {dropdownOpen && onLogout && (
               <button 
-                onClick={onLogout}
-                className="absolute right-0 top-12 hidden group-hover:block bg-surface-container-lowest border border-outline-variant rounded-lg p-2 shadow-md hover:bg-error-container hover:text-on-error-container text-body-md transition-colors whitespace-nowrap z-50"
+                onClick={() => {
+                  setDropdownOpen(false);
+                  onLogout();
+                }}
+                className="absolute right-0 top-12 bg-surface-container-lowest border border-outline-variant rounded-lg py-2.5 px-4 shadow-lg hover:bg-error-container hover:text-on-error-container text-body-md text-error font-semibold transition-all whitespace-nowrap z-50 flex items-center gap-2 border border-outline-variant"
               >
+                <span className="material-symbols-outlined text-[18px]">logout</span>
                 Sign Out
               </button>
             )}

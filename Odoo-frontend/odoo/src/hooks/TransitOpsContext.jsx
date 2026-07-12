@@ -29,6 +29,7 @@ export const TransitOpsProvider = ({ children }) => {
   const [fuel,        setFuel]        = useState([]);
   const [kpis,        setKpis]        = useState(null);
   const [toasts,      setToasts]      = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [loading, setLoading] = useState({
     vehicles: false, drivers: false, trips: false,
@@ -359,6 +360,7 @@ export const TransitOpsProvider = ({ children }) => {
     <TransitOpsContext.Provider value={{
       vehicles, drivers, trips, maintenance, fuel, kpis, loading,
       toasts, triggerToast, removeToast,
+      searchQuery, setSearchQuery,
       fetchVehicles, fetchDrivers, fetchTrips, fetchMaintenance, fetchFuel, fetchKpis,
       addVehicle, editVehicle, deleteVehicle,
       addDriver, editDriver, deleteDriver,

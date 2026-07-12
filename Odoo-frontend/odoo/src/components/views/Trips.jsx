@@ -12,7 +12,8 @@ const Trips = () => {
     dispatchTrip, 
     completeTrip, 
     cancelTrip,
-    triggerToast 
+    triggerToast,
+    searchQuery
   } = useTransitOps();
 
   // Search & Selector State
@@ -29,7 +30,19 @@ const Trips = () => {
     distance: ''
   });
 
-  const activeTrips = trips.filter(t => t.status !== 'Completed' && t.status !== 'Cancelled');
+  const activeTrips = trips.filter(t => {
+    const isNotFinished = t.status !== 'Completed' && t.status !== 'Cancelled';
+    if (!isNotFinished) return false;
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      t.id.toLowerCase().includes(query) ||
+      t.origin.toLowerCase().includes(query) ||
+      t.destination.toLowerCase().includes(query) ||
+      (t.vehicleName && t.vehicleName.toLowerCase().includes(query)) ||
+      (t.driverName && t.driverName.toLowerCase().includes(query))
+    );
+  });
   const selectedTrip = trips.find(t => t.id === selectedTripId) || trips[0];
 
   // Helper arrays for selectable assets

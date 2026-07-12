@@ -4,8 +4,8 @@ import StatusBadge from './common/StatusBadge';
 import reportService from '../services/reportService';
 import { useTransitOps } from '../hooks/TransitOpsContext';
 
-const Reports = ({ searchQuery = '' }) => {
-  const { triggerToast } = useTransitOps();
+const Reports = () => {
+  const { searchQuery = '', triggerToast } = useTransitOps() || {};
   // Atmospheric background tracking
   const [bgStyle, setBgStyle] = useState({});
   const containerRef = useRef(null);
