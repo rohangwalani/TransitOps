@@ -38,7 +38,6 @@ public class Driver {
 
     private String licenseCategory;
 
-    @Column(nullable = false)
     private LocalDate licenseExpiryDate;
 
     private String contactNumber;

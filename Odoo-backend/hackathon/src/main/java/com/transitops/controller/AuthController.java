@@ -40,15 +40,18 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final com.transitops.service.EmailService emailService;
 
     public AuthController(AuthenticationManager authenticationManager,
                           UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
-                          JwtUtils jwtUtils) {
+                          JwtUtils jwtUtils,
+                          com.transitops.service.EmailService emailService) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtils = jwtUtils;
+        this.emailService = emailService;
     }
 
     @PostMapping("/login")
@@ -96,6 +99,12 @@ public class AuthController {
 
         userRepository.save(user);
         log.info("User registered successfully: {}", signupRequest.getEmail());
+
+        // Send Welcome Email
+        String subject = "Welcome to TransitOps!";
+        String text = "Hi " + user.getName() + ",\n\nWelcome to TransitOps! Your account has been successfully created.\n\nBest regards,\nThe TransitOps Team";
+        emailService.sendEmail(user.getEmail(), subject, text);
+
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
     }
 }
