@@ -23,47 +23,74 @@ const Login = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      
+
       if (response.ok) {
-        const user = await response.json();
-        console.log('Logged in successfully:', user);
-        
-        // Save user details along with their selected administrative role
+        const data = await response.json();
+
+        // Map frontend role options to backend authorities
+        const roleMapping = {
+          fleet_manager: 'ROLE_FLEET_MANAGER',
+          dispatcher: 'ROLE_FLEET_MANAGER',
+          safety_officer: 'ROLE_SAFETY_OFFICER',
+          financial_analyst: 'ROLE_FINANCIAL_ANALYST',
+        };
+
+        const requiredRole = roleMapping[role];
+        const hasRole = data.roles?.includes(requiredRole) || data.roles?.includes('ROLE_ADMIN');
+
+        if (!hasRole) {
+          const roleDisplay = role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          setError(`Access denied. Your account is not authorized as a ${roleDisplay}.`);
+          setLoading(false);
+          return;
+        }
+
+        // Store the full JWT response: { token, id, name, email, roles }
         const sessionUser = {
-          ...user,
-          role: role
+          token: data.token,
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          roles: data.roles,
+          selectedRole: role, // keep the role the user picked in the UI
         };
         localStorage.setItem('user', JSON.stringify(sessionUser));
-        
+
         if (remember) {
           localStorage.setItem('rememberedEmail', email);
         } else {
           localStorage.removeItem('rememberedEmail');
         }
-
-        alert(`Authentication successful! Logged in as ${user.name || 'User'} (${role.replace('_', ' ')})`);
         navigate('/dashboard');
       } else {
-        const errText = await response.text();
-        setError(errText || 'Invalid email or password.');
+        let errMsg = 'Invalid email or password.';
+        try { const body = await response.json(); errMsg = body.message || errMsg; } catch (_) {}
+        setError(errMsg);
       }
     } catch (err) {
-      console.warn('Backend server offline. Proceeding with local Demo Session for testing...');
-      const demoUser = { name: 'Alex Sterling', email: email || 'alex@transitops.io', role: role };
+      console.warn('Backend server offline — starting Demo Session.');
+      const roleMapping = {
+        fleet_manager: 'ROLE_FLEET_MANAGER',
+        dispatcher: 'ROLE_FLEET_MANAGER',
+        safety_officer: 'ROLE_SAFETY_OFFICER',
+        financial_analyst: 'ROLE_FINANCIAL_ANALYST',
+      };
+      const demoUser = {
+        token: 'DEMO_TOKEN',
+        name: 'Demo User',
+        email: email || 'demo@transitops.io',
+        roles: [roleMapping[role] || 'ROLE_FLEET_MANAGER'],
+        selectedRole: role,
+      };
       localStorage.setItem('user', JSON.stringify(demoUser));
-      
-      if (remember) {
-        localStorage.setItem('rememberedEmail', email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
-      }
-      
-      alert(`Authentication server offline. Started local Demo session as: ${demoUser.name} (${role.replace('_', ' ')})`);
-      navigate('/dashboard');
+      if (remember) localStorage.setItem('rememberedEmail', email);
+      setError('⚠️ Backend offline — running in Demo mode.');
+      setTimeout(() => navigate('/dashboard'), 800);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <main className="min-h-screen flex flex-col md:flex-row">

@@ -1,179 +1,208 @@
 import React from 'react';
+import { useTransitOps } from '../../hooks/TransitOpsContext';
 import KPICard from '../common/KPICard';
 import Table from '../common/Table';
 import StatusBadge from '../common/StatusBadge';
+import FleetMap from '../common/FleetMap';
 
 const OperationalOverview = () => {
+  const { vehicles, drivers, trips, maintenance, kpis: backendKpis, triggerToast } = useTransitOps();
+
+  // Compute robust KPIs handling both backend values and local calculations
+  const totalVehiclesCount = backendKpis?.totalVehicles ?? vehicles.length;
+  const availVehiclesCount = backendKpis?.availableVehicles ?? vehicles.filter(v => v.status === 'Available').length;
+  const tripVehiclesCount  = backendKpis?.vehiclesOnTrip ?? vehicles.filter(v => v.status === 'On Trip').length;
+  const activeMaintCount   = backendKpis 
+    ? ((backendKpis.activeMaintenance || 0) + (backendKpis.scheduledMaintenance || 0)) 
+    : maintenance.filter(m => m.status === 'Scheduled' || m.status === 'In Progress').length;
+  
+  const activeVehicles = vehicles.filter(v => v.status !== 'Retired').length;
+  const onTripVehicles = vehicles.filter(v => v.status === 'On Trip').length;
+  const utilizationVal = backendKpis?.fleetUtilizationPercent ?? (
+    activeVehicles > 0 ? ((onTripVehicles / activeVehicles) * 100) : 0
+  );
+  
+  const driversActiveDuty = backendKpis?.driversOnTrip ?? drivers.filter(d => d.status === 'On Trip').length;
+
+  const kpis = {
+    totalVehicles: totalVehiclesCount,
+    availableVehicles: availVehiclesCount,
+    vehiclesOnTrip: tripVehiclesCount,
+    driversOnDuty: driversActiveDuty,
+    maintenanceCount: activeMaintCount,
+    utilization: Math.round(Number(utilizationVal) || 0)
+  };
+
+  // Dynamic Chart values calculated based on active states
+  // Monday - Saturday: static historical trends
+  // Sunday: binds dynamically to current active utilization and operational capacity
+  const activeTotal = vehicles.filter(v => v.status !== 'Retired').length;
+  const inTripCount = vehicles.filter(v => v.status === 'On Trip').length;
+  const inShopCount = vehicles.filter(v => v.status === 'In Shop').length;
+  const availableCount = vehicles.filter(v => v.status === 'Available').length;
+  
+  const currentDemandPct = activeTotal > 0 ? Math.round((inTripCount / activeTotal) * 100) : 0;
+  const currentCapacityPct = activeTotal > 0 ? Math.round(((availableCount + inTripCount) / activeTotal) * 100) : 0;
+
   const chartData = [
-    { day: 'Mon', capacity: 65, demand: 80, height: '60%' },
-    { day: 'Tue', capacity: 70, demand: 90, height: '75%' },
-    { day: 'Wed', capacity: 95, demand: 100, height: '85%' },
+    { day: 'Mon', capacity: 70, demand: 80, height: '70%' },
+    { day: 'Tue', capacity: 75, demand: 85, height: '75%' },
+    { day: 'Wed', capacity: 90, demand: 95, height: '85%' },
     { day: 'Thu', capacity: 60, demand: 70, height: '65%' },
-    { day: 'Fri', capacity: 80, demand: 85, height: '90%' },
-    { day: 'Sat', capacity: 85, demand: 95, height: '70%' },
-    { day: 'Sun', capacity: 90, demand: 100, height: '100%' },
+    { day: 'Fri', capacity: 80, demand: 90, height: '90%' },
+    { day: 'Sat', capacity: 85, demand: 75, height: '70%' },
+    { 
+      day: 'Sun', 
+      capacity: currentCapacityPct || 50, 
+      demand: currentDemandPct || 40, 
+      height: '100%' 
+    },
   ];
+
+  // Map trips to fit Recent Trip Logs layout
+  const activeNowTrips = trips.slice(0, 5); // display latest 5 logs
 
   const recentTripsColumns = [
     {
       title: 'Trip ID',
       key: 'id',
-      render: (value) => <span className="font-label-md text-label-md font-bold text-primary">{value}</span>
+      render: (value) => <span className="font-label-md text-label-md font-bold text-primary font-mono">{value}</span>
     },
     {
-      title: 'Vehicle / Driver',
+      title: 'Vehicle & Driver',
       key: 'vehicle',
       render: (value, row) => (
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded bg-primary-fixed flex items-center justify-center text-primary shrink-0">
-            <span className="material-symbols-outlined text-[20px]">local_shipping</span>
+            <span className="material-symbols-outlined text-[20px] select-none">local_shipping</span>
           </div>
           <div>
-            <p className="font-body-md text-body-md font-bold">{row.vehicle}</p>
-            <p className="font-label-sm text-label-sm text-on-surface-variant">{row.driver}</p>
+            <p className="font-body-md text-body-md font-bold text-on-surface">{row.vehicleId}</p>
+            <p className="font-label-sm text-label-sm text-on-surface-variant font-medium">{row.driverName}</p>
           </div>
         </div>
       )
     },
     {
-      title: 'Route',
+      title: 'Route details',
       key: 'route',
       render: (value, row) => (
         <div className="flex flex-col">
-          <span className="font-body-md text-body-md">{row.origin}</span>
+          <span className="font-body-md text-body-md text-on-surface">{row.origin}</span>
           <span className="text-outline text-[12px] flex items-center gap-1">
-            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            <span className="material-symbols-outlined text-[14px] select-none">arrow_forward</span>
             {row.destination}
           </span>
         </div>
       )
     },
     {
-      title: 'Departure',
-      key: 'departure',
-      render: (value) => <span className="font-body-md text-body-md text-on-surface-variant">{value}</span>
+      title: 'Progress status',
+      key: 'progress',
+      render: (value, row) => (
+        <div className="w-24">
+          <div className="flex justify-between text-[10px] mb-0.5 text-on-surface-variant font-mono">
+            <span>{row.progress}%</span>
+            <span>{row.speed}</span>
+          </div>
+          <div className="w-full bg-surface-container h-1 rounded-full overflow-hidden">
+            <div className="bg-primary h-full" style={{ width: `${row.progress}%` }}></div>
+          </div>
+        </div>
+      )
     },
     {
       title: 'Status',
       key: 'status',
-      render: (value, row) => <StatusBadge status={row.status} label={row.label} />
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
-      render: () => (
-        <button className="text-primary font-body-md text-body-md font-semibold hover:underline md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-          Track Details
-        </button>
-      )
-    }
-  ];
+      render: (value, row) => {
+        let badgeType = 'neutral';
+        if (row.status === 'On Schedule' || row.status === 'En Route') badgeType = 'active';
+        else if (row.status === 'Delayed') badgeType = 'critical';
+        else if (row.status === 'Completed') badgeType = 'info';
+        else if (row.status === 'Cancelled') badgeType = 'neutral';
 
-  const recentTripsData = [
-    { 
-      id: '#TO-9842', 
-      vehicle: 'Freightliner Cascadia', 
-      driver: 'Michael Chen', 
-      origin: 'Jersey City, NJ', 
-      destination: 'Boston, MA', 
-      departure: 'Oct 24, 08:30 AM', 
-      status: 'completed', 
-      label: 'On Schedule' 
-    },
-    { 
-      id: '#TO-9841', 
-      vehicle: 'Volvo VNL 860', 
-      driver: 'Sarah Jenkins', 
-      origin: 'Philadelphia, PA', 
-      destination: 'Washington, DC', 
-      departure: 'Oct 24, 09:15 AM', 
-      status: 'inactive', 
-      label: 'Idle' 
-    },
-    { 
-      id: '#TO-9840', 
-      vehicle: 'Peterbilt 579', 
-      driver: 'Robert Ford', 
-      origin: 'Newark, NJ', 
-      destination: 'Albany, NY', 
-      departure: 'Oct 24, 07:00 AM', 
-      status: 'critical', 
-      label: 'Delayed (Traffic)' 
+        return <StatusBadge status={badgeType} label={row.status} />;
+      }
     }
   ];
 
   return (
-    <>
+    <div className="space-y-gutter">
+      
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 select-none animate-fade-in">
         <div>
           <h2 className="font-headline-lg text-headline-lg text-on-background">Operational Overview</h2>
           <p className="font-body-lg text-body-lg text-on-surface-variant">Real-time performance metrics across your fleet.</p>
         </div>
         <div className="flex gap-3">
-          <button className="px-unit-md py-2 rounded-lg border border-outline-variant bg-surface-container-lowest font-body-md text-body-md hover:bg-surface-container transition-colors flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px]">calendar_today</span>
+          <button 
+            onClick={() => triggerToast('Toggled calendar view scope (mock).', 'info')}
+            className="px-unit-md py-2 rounded-lg border border-outline-variant bg-surface-container-lowest font-body-md text-body-md hover:bg-surface-container transition-colors flex items-center gap-2 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px] select-none">calendar_today</span>
             Last 24 Hours
           </button>
-          <button className="px-unit-md py-2 rounded-lg bg-primary text-white font-body-md text-body-md font-semibold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-[0.98]">
-            <span className="material-symbols-outlined text-[20px]">file_download</span>
+          <button 
+            onClick={() => triggerToast('Fleet performance report exported (mock download).', 'success')}
+            className="px-unit-md py-2 rounded-lg bg-primary text-white font-body-md text-body-md font-semibold hover:opacity-90 transition-all flex items-center gap-2 shadow-sm active:scale-[0.98] cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px] select-none">file_download</span>
             Export Report
           </button>
         </div>
       </div>
 
       {/* KPI Grid Section */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
-        {/* Active Vehicles */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter select-none">
+        
+        {/* Total Assets */}
         <KPICard
-          title="Active Vehicles"
-          value="1,284"
+          title="Total Vehicles"
+          value={kpis.totalVehicles.toString()}
           icon="local_shipping"
           iconBgClass="bg-primary-fixed text-primary"
-          trendText="+12%"
+          trendText={`Available: ${kpis.availableVehicles}`}
           trendType="success"
-          subtext="from 1,146 yesterday"
         />
 
-        {/* On-Time Rate */}
+        {/* Vehicles On Trip */}
         <KPICard
-          title="On-Time Rate"
-          value="98.2%"
+          title="Vehicles On Trip"
+          value={kpis.vehiclesOnTrip.toString()}
           icon="schedule"
           iconBgClass="bg-secondary-container text-on-secondary-container"
-          trendText="Optimal"
+          trendText={`Active Duty: ${kpis.driversOnDuty}`}
           trendType="success"
-          progressBar={98.2}
         />
 
-        {/* Fuel Efficiency */}
+        {/* In Maintenance */}
         <KPICard
-          title="Fuel Efficiency"
-          value="8.4 mpg"
-          icon="gas_meter"
+          title="In Maintenance"
+          value={kpis.maintenanceCount.toString()}
+          icon="build"
           iconBgClass="bg-tertiary-fixed text-on-tertiary-fixed-variant"
-          trendText="-2.4%"
+          trendText="Action Required"
           trendType="error"
-          subtext="Avg. fleet consumption"
         />
 
-        {/* Maintenance Alerts */}
+        {/* Fleet Utilization */}
         <KPICard
-          title="Maintenance Alerts"
-          value="07"
-          valueColor="text-error"
-          icon="warning"
+          title="Fleet Utilization"
+          value={`${kpis.utilization}%`}
+          icon="speed"
           iconBgClass="bg-error-container text-error"
-          subtext="3 critical items pending"
+          progressBar={Number(kpis.utilization)}
+          subtext="Active assets efficiency"
         />
       </section>
 
       {/* Fleet Status & Trends Bento Grid */}
       <section className="grid grid-cols-12 gap-gutter">
         {/* Capacity vs Demand Chart */}
-        <div className="col-span-12 lg:col-span-8 bg-surface-container-lowest p-unit-lg rounded-xl border border-outline-variant soft-shadow">
-          <div className="flex justify-between items-center mb-unit-lg">
-            <h3 className="font-title-md text-title-md text-on-background">Fleet Capacity vs Demand</h3>
+        <div className="col-span-12 lg:col-span-8 bg-surface-container-lowest p-unit-lg rounded-xl border border-outline-variant soft-shadow flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-unit-lg select-none">
+            <h3 className="font-title-md text-title-md text-on-background font-semibold">Fleet Capacity vs Demand</h3>
             <div className="flex gap-4">
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 bg-primary rounded-full"></span>
@@ -186,23 +215,25 @@ const OperationalOverview = () => {
             </div>
           </div>
 
-          {/* Dynamic CSS Bar Chart */}
-          <div className="h-64 relative w-full flex items-end gap-2 overflow-hidden px-4">
+          {/* Bar Chart (Height mapped to values) */}
+          <div className="h-64 relative w-full flex items-end gap-2 overflow-hidden px-4 select-none">
             {chartData.map((d, index) => (
-              <div key={index} className="flex-1 bg-surface-container rounded-t-lg relative group" style={{ height: d.height }}>
+              <div key={index} className="flex-1 bg-surface-container rounded-t-lg relative group h-full flex items-end">
                 <div 
-                  className="absolute bottom-0 w-full bg-primary rounded-t-lg transition-all duration-700 group-hover:opacity-80" 
+                  className="w-[45%] bg-primary rounded-t-lg transition-all duration-700 hover:opacity-80 ml-auto mr-0.5" 
                   style={{ height: `${d.demand}%` }}
+                  title={`Demand: ${d.demand}%`}
                 ></div>
                 <div 
-                  className="absolute bottom-0 left-1/2 w-1/2 -translate-x-1/2 bg-secondary rounded-t-lg transition-all duration-700" 
+                  className="w-[45%] bg-secondary rounded-t-lg transition-all duration-700 hover:opacity-80 mr-auto ml-0.5" 
                   style={{ height: `${d.capacity}%` }}
+                  title={`Capacity: ${d.capacity}%`}
                 ></div>
               </div>
             ))}
           </div>
 
-          <div className="flex justify-between mt-4 text-on-surface-variant font-label-md text-label-md px-4">
+          <div className="flex justify-between mt-4 text-on-surface-variant font-label-md text-label-md px-4 select-none">
             {chartData.map((d, i) => (
               <span key={i}>{d.day}</span>
             ))}
@@ -210,19 +241,21 @@ const OperationalOverview = () => {
         </div>
 
         {/* Live Distribution Map */}
-        <div className="col-span-12 lg:col-span-4 bg-surface-container-lowest p-unit-lg rounded-xl border border-outline-variant soft-shadow relative overflow-hidden group min-h-[300px]">
-          <h3 className="font-title-md text-title-md mb-unit-lg relative z-10 text-on-background">Live Fleet Distribution</h3>
-          <div className="absolute inset-0 z-0">
-            <div 
-              className="w-full h-full grayscale hover:grayscale-0 transition-all duration-500 bg-cover bg-center" 
-              style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCiprVW8bxhfUE-vL_vx6wKDCRSd5YLMfGDUzPh4UASoOj99lobF06vI5tAkhsNfNvOT236rJ0L6Klam8u4DDgf1X2TxyylAhy-pCkbb-zGXpoZp1YBT4o-sOthSl-N-SnnQDZkpMWnfN_kz9IVXjXLueJtkvUBtyMmxe7Smk_1gaXypP2TvuItmhpCfKoZPnSgc8oi4yUG791kp7HPJRAt6ziztzWEG9GHcAlwbq2ilsrlvzegBVw9IQ')" }}
-              alt="New York distribution map interface"
-            ></div>
+        <div className="col-span-12 lg:col-span-4 bg-surface-container-lowest p-unit-lg rounded-xl border border-outline-variant soft-shadow relative overflow-hidden group min-h-[340px] flex flex-col justify-between">
+          <h3 className="font-title-md text-title-md mb-unit-lg z-10 text-on-background font-semibold">Live Fleet Distribution</h3>
+          
+          <div className="flex-1 w-full relative z-0 min-h-[200px] rounded-lg overflow-hidden border border-outline-variant/30">
+            <FleetMap height="100%" />
           </div>
-          <div className="absolute bottom-unit-md left-unit-md right-unit-md bg-white/90 backdrop-blur-md p-unit-md rounded-lg border border-outline-variant z-10 shadow-sm">
-            <div className="flex justify-between items-center">
-              <span className="font-body-md text-body-md font-semibold text-on-surface">Tri-State Area</span>
-              <span className="font-label-md text-label-md text-secondary font-bold">84 Vehicles Active</span>
+
+          <div className="mt-4 bg-white/90 backdrop-blur-md p-unit-md rounded-lg border border-outline-variant/60 z-10 shadow-sm">
+            <div className="flex justify-between items-center select-none text-xs">
+              <span className="font-body-md font-semibold text-on-surface">Live Fleet Tracking</span>
+              <span className="font-label-md text-secondary font-bold">{inTripCount} Vehicles Active</span>
+            </div>
+            <div className="flex justify-between items-center mt-2 text-[10px] text-outline uppercase font-semibold">
+              <span>Depot: {availableCount}</span>
+              <span>Maintenance: {inShopCount}</span>
             </div>
           </div>
         </div>
@@ -230,46 +263,42 @@ const OperationalOverview = () => {
 
       {/* Trips Table */}
       <section className="bg-surface-container-lowest rounded-xl border border-outline-variant soft-shadow overflow-hidden flex flex-col">
-        <div className="px-unit-lg py-unit-md border-b border-outline-variant flex justify-between items-center bg-white">
-          <h3 className="font-title-md text-title-md text-on-background">Recent Trip Logs</h3>
+        <div className="px-unit-lg py-unit-md border-b border-outline-variant flex justify-between items-center bg-white select-none">
+          <h3 className="font-title-md text-title-md text-on-background font-semibold">Recent Trip Logs</h3>
           <div className="flex gap-2">
-            <button className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors flex items-center justify-center">
-              <span className="material-symbols-outlined">filter_list</span>
-            </button>
-            <button className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors flex items-center justify-center">
-              <span className="material-symbols-outlined">more_vert</span>
+            <button 
+              onClick={() => triggerToast('Trip logs filter updated.', 'info')}
+              className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-colors flex items-center justify-center cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">filter_list</span>
             </button>
           </div>
         </div>
         
         <Table 
           columns={recentTripsColumns} 
-          data={recentTripsData} 
+          data={activeNowTrips} 
         />
 
-        <div className="px-unit-lg py-4 bg-surface-container-lowest flex justify-between items-center border-t border-outline-variant">
-          <span className="font-body-md text-body-md text-on-surface-variant">Showing 1-3 of 1,284 trips</span>
-          <div className="flex gap-2">
-            <button className="p-1.5 border border-outline-variant rounded hover:bg-surface-container transition-colors disabled:opacity-30" disabled>
-              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
-            </button>
-            <button className="p-1.5 border border-outline-variant rounded hover:bg-surface-container transition-colors">
-              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
-            </button>
-          </div>
-        </div>
+        {activeNowTrips.length === 0 && (
+          <p className="text-body-md text-on-surface-variant italic text-center p-8">No recent logs recorded.</p>
+        )}
       </section>
 
       {/* Dynamic Insights Footer Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-gutter select-none">
+        
         {/* AI Optimization Insight */}
-        <div className="p-unit-lg bg-inverse-surface text-inverse-on-surface rounded-xl flex items-center gap-6 overflow-hidden relative min-h-[160px]">
+        <div 
+          onClick={() => triggerToast('Rerouting optimization parameters successfully applied!', 'success')}
+          className="p-unit-lg bg-inverse-surface text-inverse-on-surface rounded-xl flex items-center gap-6 overflow-hidden relative min-h-[160px] cursor-pointer group"
+        >
           <div className="flex-1 z-10">
             <h4 className="font-title-md text-title-md mb-2">AI Optimization Insight</h4>
             <p className="font-body-md text-body-md opacity-80">
-              Rerouting 12 vehicles in the NE corridor could save 4.2% fuel costs today based on current traffic patterns.
+              Rerouting active vehicles around Mumbai corridor could save 4.2% fuel costs today based on real-time traffic updates.
             </p>
-            <button className="mt-4 px-unit-md py-2 bg-primary-fixed text-primary font-bold rounded-lg hover:bg-white transition-colors">
+            <button className="mt-4 px-unit-md py-2 bg-primary-fixed text-primary font-bold rounded-lg group-hover:bg-white transition-colors">
               Apply Optimization
             </button>
           </div>
@@ -292,10 +321,10 @@ const OperationalOverview = () => {
             </div>
             <span className="font-label-md text-label-md text-secondary font-bold">100% UP</span>
           </div>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-2">All API nodes and tracking sensors are operational.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-2 font-medium">All API nodes and tracking sensors are operational.</p>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 

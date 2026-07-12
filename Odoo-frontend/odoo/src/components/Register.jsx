@@ -6,6 +6,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('fleet_manager');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,25 +15,45 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Client-side validation
+    if (!name.trim()) { setError('Full name is required.'); return; }
+    if (!email.trim()) { setError('Email is required.'); return; }
+    if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
+
     setLoading(true);
 
+    const roleMapping = {
+      fleet_manager: 'ROLE_FLEET_MANAGER',
+      dispatcher: 'ROLE_FLEET_MANAGER',
+      safety_officer: 'ROLE_SAFETY_OFFICER',
+      financial_analyst: 'ROLE_FINANCIAL_ANALYST',
+    };
+
+    const selectedRole = roleMapping[role];
+
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch('http://localhost:8080/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+          roles: [selectedRole]
+        }),
       });
-      
+
       if (response.ok) {
-        alert('Registration successful! Redirecting to login.');
-        navigate('/');
+        navigate('/?registered=1');
       } else {
-        const errText = await response.text();
-        setError(errText || 'Failed to register account.');
+        let errMsg = 'Failed to register account.';
+        try { const body = await response.json(); errMsg = body.message || errMsg; } catch (_) {}
+        setError(errMsg);
       }
     } catch (err) {
-      console.error(err);
-      setError('Failed to connect to registration server.');
+      console.warn('Registration server offline.');
+      setError('⚠️ Backend offline — cannot register. Use Demo login instead.');
     } finally {
       setLoading(false);
     }
@@ -49,7 +70,7 @@ const Register = () => {
           </div>
           
           <h1 className="font-display-lg text-display-lg text-white mb-unit-lg leading-tight">
-            Optimizing global movement in <span class="text-secondary-fixed">real-time.</span>
+            Optimizing global movement in <span className="text-secondary-fixed">real-time.</span>
           </h1>
           
           <div className="grid grid-cols-2 gap-unit-md">
@@ -93,7 +114,95 @@ const Register = () => {
               </div>
             )}
 
+            {/* Role Selection Grid */}
+            <div>
+              <label className="block font-label-sm text-label-sm text-outline uppercase tracking-wider mb-unit-sm">Select Your Target Role</label>
+              <div className="grid grid-cols-2 gap-unit-sm mb-unit-md">
+                
+                {/* Fleet Manager */}
+                <label className="cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="role" 
+                    value="fleet_manager"
+                    checked={role === 'fleet_manager'}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="hidden role-radio"
+                  />
+                  <div className="role-card h-full p-unit-md border border-outline-variant rounded-xl flex items-center space-x-unit-md">
+                    <div className="icon-circle w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-high text-primary transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>local_shipping</span>
+                    </div>
+                    <div>
+                      <span className="block font-title-md text-sm font-semibold">Fleet Manager</span>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Dispatcher */}
+                <label className="cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="role" 
+                    value="dispatcher"
+                    checked={role === 'dispatcher'}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="hidden role-radio"
+                  />
+                  <div className="role-card h-full p-unit-md border border-outline-variant rounded-xl flex items-center space-x-unit-md">
+                    <div className="icon-circle w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-high text-primary transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
+                    </div>
+                    <div>
+                      <span className="block font-title-md text-sm font-semibold">Dispatcher</span>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Safety Officer */}
+                <label className="cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="role" 
+                    value="safety_officer"
+                    checked={role === 'safety_officer'}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="hidden role-radio"
+                  />
+                  <div className="role-card h-full p-unit-md border border-outline-variant rounded-xl flex items-center space-x-unit-md">
+                    <div className="icon-circle w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-high text-primary transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
+                    </div>
+                    <div>
+                      <span className="block font-title-md text-sm font-semibold">Safety Officer</span>
+                    </div>
+                  </div>
+                </label>
+
+                {/* Financial Analyst */}
+                <label className="cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="role" 
+                    value="financial_analyst"
+                    checked={role === 'financial_analyst'}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="hidden role-radio"
+                  />
+                  <div className="role-card h-full p-unit-md border border-outline-variant rounded-xl flex items-center space-x-unit-md">
+                    <div className="icon-circle w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-high text-primary transition-colors">
+                      <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
+                    </div>
+                    <div>
+                      <span className="block font-title-md text-sm font-semibold">Financial Analyst</span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
             {/* Input Fields */}
+
             <div className="space-y-unit-md">
               {/* Full Name */}
               <div className="group">
@@ -143,7 +252,12 @@ const Register = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    className="w-full h-12 px-unit-md bg-surface border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-lg placeholder:text-outline-variant pr-12"
+                    minLength={6}
+                    className={`w-full h-12 px-unit-md bg-surface border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none text-body-lg placeholder:text-outline-variant pr-12 ${
+                      password.length > 0 && password.length < 6
+                        ? 'border-error focus:ring-error'
+                        : 'border-outline-variant'
+                    }`}
                   />
                   <button 
                     type="button" 
@@ -155,6 +269,18 @@ const Register = () => {
                     </span>
                   </button>
                 </div>
+                {/* Password strength hint */}
+                <p className={`text-label-sm mt-1 ${
+                  password.length === 0 ? 'text-outline-variant'
+                  : password.length < 6  ? 'text-error'
+                  : 'text-secondary'
+                }`}>
+                  {password.length === 0
+                    ? 'Minimum 6 characters required'
+                    : password.length < 6
+                    ? `${6 - password.length} more character${6 - password.length > 1 ? 's' : ''} needed`
+                    : '✓ Password length OK'}
+                </p>
               </div>
             </div>
 

@@ -7,8 +7,10 @@ const Navbar = ({ user, onLogout, toggleSidebar }) => {
     return role.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
 
-  const displayName = user?.name || 'Alex Sterling';
-  const displayRole = formatRole(user?.role);
+  const displayName = user?.name || 'User';
+  // Support both old (role) and new (selectedRole / roles[]) user formats
+  const rawRole = user?.selectedRole || user?.role || (user?.roles?.[0] ?? 'fleet_manager');
+  const displayRole = formatRole(rawRole?.replace('ROLE_', '').toLowerCase());
   
   // Default corporate portrait from user dashboard HTML
   const defaultAvatar = "https://lh3.googleusercontent.com/aida-public/AB6AXuCDNH81NEYgB9TZOK_MydQrV7XbwtbPD-nsRql4IelRXdvd8cJyrfjoc3uFRPu1dbMfhtid5uWKADnVHcI8YbdddAMpLbrtH-nKb-bOB-w1wyxQsXnRO5f2rZ9w-SSDLW4kvGrJ9W5RC51cg0HT5fawRVCGmYBlEuwA8WdLKCgdNJZjG9V2LnY3sp7DtpqRYO8z8r0UvNRUSJj7hRbEvYJM2FjHb7KQEK-R_-5MoNsRoHSq0muKpQkoLg";

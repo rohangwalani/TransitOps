@@ -94,6 +94,16 @@ const Sidebar = ({ activeItem = 'dashboard', onItemClick, isOpen, toggleSidebar 
             </span>
             <span className="font-body-md text-body-md">Settings</span>
           </a>
+
+          {/* Sign Out */}
+          <a
+            href="#logout"
+            onClick={(e) => handleItemClick('logout', e)}
+            className="flex items-center gap-3 px-unit-md py-2.5 rounded-lg text-error hover:bg-error-container/10 transition-colors mt-2 cursor-pointer"
+          >
+            <span className="material-symbols-outlined">logout</span>
+            <span className="font-body-md text-body-md">Sign Out</span>
+          </a>
         </nav>
       </aside>
     </>

@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
+import { useTransitOps } from '../hooks/TransitOpsContext';
 
 const Settings = () => {
+  const { triggerToast } = useTransitOps();
   const [activeSubTab, setActiveSubTab] = useState('account');
-  const [showToast, setShowToast] = useState(false);
 
   // Form State
+  const getInitialUser = () => {
+    try {
+      const data = localStorage.getItem('user');
+      return data ? JSON.parse(data) : { name: 'Alex Sterling', role: 'fleet_manager', email: 'alex@transitops.io' };
+    } catch {
+      return { name: 'Alex Sterling', role: 'fleet_manager', email: 'alex@transitops.io' };
+    }
+  };
+
+  const activeUser = getInitialUser();
+
   const initialFormState = {
-    fullName: 'Jane Alexandra Doe',
-    email: 'jane.doe@transitops.io',
-    contactNumber: '+1 (555) 902-3482',
+    fullName: activeUser.name || 'Alex Sterling',
+    email: activeUser.email || 'alex@transitops.io',
+    contactNumber: activeUser.contact || '+1 (555) 902-3482',
     timezone: 'Eastern Standard Time (EST)',
     dateFormat: 'MM/DD/YYYY',
     defaultDashboard: 'Fleet Overview',
@@ -30,16 +42,26 @@ const Settings = () => {
 
   // Save Settings
   const handleSave = () => {
-    // Show toast
-    setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
+    try {
+      const updatedUser = {
+        ...activeUser,
+        name: formData.fullName,
+        email: formData.email,
+        contact: formData.contactNumber
+      };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Dispatch storage event to alert persistent navbar
+      window.dispatchEvent(new Event('user-profile-update'));
+      triggerToast('Settings updated successfully.', 'success');
+    } catch (err) {
+      triggerToast('Failed to save settings.', 'error');
+    }
   };
 
   // Discard Changes
   const handleDiscard = () => {
     setFormData({ ...initialFormState });
+    triggerToast('Changes discarded.', 'info');
   };
 
   const subTabs = [
@@ -360,21 +382,6 @@ const Settings = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Success Toast */}
-      <div
-        className={`fixed bottom-8 right-8 bg-inverse-surface text-inverse-on-surface px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 z-50 ${
-          showToast ? 'translate-y-0 opacity-100' : 'translate-y-24 opacity-0 pointer-events-none'
-        }`}
-      >
-        <span
-          className="material-symbols-outlined text-secondary"
-          style={{ fontVariationSettings: "'FILL' 1" }}
-        >
-          check_circle
-        </span>
-        <span className="font-semibold text-body-md">Settings updated successfully</span>
       </div>
     </div>
   );
