@@ -3,6 +3,7 @@ import { useTransitOps } from '../../hooks/TransitOpsContext';
 import KPICard from '../common/KPICard';
 import Table from '../common/Table';
 import StatusBadge from '../common/StatusBadge';
+import reportService from '../../services/reportService';
 import FleetMap from '../common/FleetMap';
 
 const Vehicles = () => {
@@ -254,8 +255,26 @@ const Vehicles = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    triggerToast('Vehicle CSV data exported successfully (mock download).', 'info');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCSV = async () => {
+    try {
+      setIsExporting(true);
+      const blob = await reportService.exportFleetReport();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'vehicles.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      triggerToast('Vehicle CSV data exported successfully.', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      triggerToast('Failed to export vehicle data.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (

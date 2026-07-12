@@ -1,11 +1,35 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Table from './common/Table';
 import StatusBadge from './common/StatusBadge';
+import reportService from '../services/reportService';
+import { useTransitOps } from '../hooks/TransitOpsContext';
 
 const Reports = ({ searchQuery = '' }) => {
+  const { triggerToast } = useTransitOps();
   // Atmospheric background tracking
   const [bgStyle, setBgStyle] = useState({});
   const containerRef = useRef(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportReport = async () => {
+    try {
+      setIsExporting(true);
+      const blob = await reportService.exportFleetReport();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'fleet_report.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      triggerToast('Fleet Report exported successfully.', 'success');
+    } catch (error) {
+      console.error('Export failed:', error);
+      triggerToast('Failed to export report.', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // ROI Chart Tooltip State
   const [tooltip, setTooltip] = useState({
@@ -310,9 +334,15 @@ const Reports = ({ searchQuery = '' }) => {
             <span className="material-symbols-outlined text-sm">filter_list</span>
             Filters
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all soft-shadow">
-            <span className="material-symbols-outlined text-sm">ios_share</span>
-            Export Report
+          <button 
+            onClick={handleExportReport}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary/90 transition-all soft-shadow disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-sm">
+              {isExporting ? 'hourglass_empty' : 'ios_share'}
+            </span>
+            {isExporting ? 'Exporting...' : 'Export Report'}
           </button>
         </div>
       </section>

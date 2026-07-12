@@ -114,10 +114,10 @@ const FuelExpenses = () => {
     };
   });
 
-  const filteredTransactions = recentTransactions.filter(
+  const filteredTransactions = mappedTransactions.filter(
     (tx) =>
-      tx.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tx.plate.toLowerCase().includes(searchQuery.toLowerCase())
+      (tx.vehicle && tx.vehicle.toLowerCase().includes(searchQuery?.toLowerCase() || '')) ||
+      (tx.plate && tx.plate.toLowerCase().includes(searchQuery?.toLowerCase() || ''))
   );
 
 
